@@ -1,6 +1,6 @@
 # Decisions log
 
-## D1 - Column selection
+## Day1 - Column selection
 <sub>25 October 2026</sub>
 
 ### Context
@@ -34,3 +34,26 @@ Keep 34 columns.
 - **Environmental data:** outside the scope of the project.
 - **Stores:** very incomplete; countries_tags is enough to filter.
 - **Who edited each product and when it was created:** not useful for the user.
+
+
+## Day2 - Minimum valid record
+<sub>25 October 2026</sub>
+
+### Context
+
+The first ~15,900 rows of the file are broken records: empty barcodes, fake codes like 0, or a category written as the product name. More broken records are spread across the rest of the file.
+
+### Decision
+
+A product is only kept if it meets all these rules:
+
+- ***Valid barcode:*** only digits and a length of 8, 12, 13 or 14. Spaces are removed first.
+- ***Sold in Spain:*** *countries_tags* contains *en:spain*.
+- ***Has a name:*** *product_name* is not empty.
+- ***Has carbs:*** *carbohydrates_100g* is not empty.
+
+### Rules
+
+- The barcode is the unique ID of each product. Without it, two products with the same name can't be told apart.
+- The Spain filter uses "contains" instead of exact values. *countries_tags* lists every country where a product is sold (for example *en:portugal,en:spain*), so an exact match would drop products sold in Spain and other countries.
+- Other columns can be empty. Asking for all 34 columns to be filled would remove almost every product.
