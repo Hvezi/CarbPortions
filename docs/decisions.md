@@ -57,3 +57,42 @@ A product is only kept if it meets all these rules:
 - The barcode is the unique ID of each product. Without it, two products with the same name can't be told apart.
 - The Spain filter uses "contains" instead of exact values. *countries_tags* lists every country where a product is sold (for example *en:portugal,en:spain*), so an exact match would drop products sold in Spain and other countries.
 - Other columns can be empty. Asking for all 34 columns to be filled would remove almost every product.
+
+## Day3 - Almost empty columns
+
+<sub>28 October 2026<sub>
+
+### Context
+
+After the D2 filters, 246,874 products remain. Measured on all of them, some columns are almost empty.
+
+### Decision
+
+Keep 29 columns.
+
+Columns with data in less than 10% of products are dropped:
+
+- ***glycemic-index_100g:*** less than 1%.
+- ***no_nutrition_data:*** less than 1%. It is also useless now, because every product left has carbs.
+- ***glucose_100g:*** 6%.
+- ***starch_100g:*** 7%.
+- ***cholesterol_100g:*** 7%.
+
+Kept as exceptions:
+
+- ***allergens_tags (12%) and traces_tags (7%):*** safety information. They can show "contains gluten" or "may contain gluten", but never "gluten-free", because an empty cell means "unknown", not "none".
+- ***polyols_100g (7%):*** about 17,000 products, enough for one insight about "sugar-free" products.
+- ***data_quality_errors_tags (6%):*** here an empty cell means "no errors found", so 6% is the share of products with detected errors.
+
+
+## Day4 - Cleaning and data types
+
+<sub>28 October 2026<sub>
+
+### Decision
+
+- ***Empty values:*** empty cells and the text "unknown" (in *pnns_groups_1*, *pnns_groups_2* and *nutriscore_grade*) are turned into real empty values (null). "not-applicable" in *nutriscore_grade* is kept, because it is real information.
+- ***Barcode as text:*** *code* stays as text. As a number, leading zeros would be lost (00000142 would become 142).
+- ***Decimal point:*** numbers are read with the English (US) format, because the file uses a point. Read with the Spanish format, 18.1 could become 181.
+- ***Two decimals:*** nutrient values are rounded to 2 decimals. The extra decimals (19.29999924) are computer rounding errors, and labels show 1 decimal at most.
+- ***Date:*** *last_modified_datetime* comes as Unix time (seconds since 1 January 1970) and is converted into a normal date.
