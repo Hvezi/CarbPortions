@@ -96,3 +96,29 @@ Kept as exceptions:
 - ***Decimal point:*** numbers are read with the English (US) format, because the file uses a point. Read with the Spanish format, 18.1 could become 181.
 - ***Two decimals:*** nutrient values are rounded to 2 decimals. The extra decimals (19.29999924) are computer rounding errors, and labels show 1 decimal at most.
 - ***Date:*** *last_modified_datetime* comes as Unix time (seconds since 1 January 1970) and is converted into a normal date.
+
+
+## Day5 - Text cleaning and impossible values
+<sub>29 October 2026</sub>
+
+### Context
+
+Product names and brands are written by thousands of people: all caps, all lowercase, double spaces, final dots, several brands in one cell. Some nutrition values are also impossible.
+
+### Decision
+
+Keep 30 columns and 246,846 products.
+
+- ***Product name:*** extra spaces and invisible characters are removed. Names written all in caps or all in lowercase become "First letter in caps". Names that already mix caps and lowercase are not changed, so abbreviations like "D.O.P." stay. A final dot is removed only when the last word has one dot.
+- ***Brand:*** only the first brand is kept, hyphens become spaces and each word starts with a capital ("HERBALIFE" and "herbalife" become "Herbalife").
+- ***Category:*** language prefixes like "es:" are removed and the first letter is capitalised.
+- ***Impossible carbs:*** products with carbs below 0 g or above 100 g per 100 g are removed (26 products). The calculator depends on this value.
+- ***Suspicious values:*** a new column *nutrition_check* marks "Check" when sugars are higher than carbs, saturated fat is higher than fat, or fat + carbs + proteins are above 105 g per 100 g. These products are kept but flagged.
+- ***Broken rows:*** 2 products had their columns shifted in the original file (for example a URL in the category column), probably because of an extra tab inside a text. They are removed completely, because none of their values can be trusted.
+
+### Rules
+
+- Text cleaning stops here. Free text written by thousands of people can't be made perfect, and each new rule fixes very few cases.
+- Similar names (for example several "Paleta de Teruel") are not merged: each one has its own barcode and is a different product.
+- Brands with a real hyphen (Coca-Cola) lose it. A small cost compared to the brands it fixes.
+- *serving_size* is not cleaned: *serving_quantity* already has the same value as a clean number.
