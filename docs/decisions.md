@@ -1,6 +1,6 @@
 # Decisions log
 
-## Day1 - Column selection
+## D1 - Column selection
 <sub>25 October 2026</sub>
 
 ### Context
@@ -13,7 +13,7 @@ Keep 34 columns.
 
 - **Identification:** find a product and show its photo in the search sheet. *(code, product_name, brands_en, image_small_url)*
 - **Category:** group products for the analysis. *(main_category_en, pnns_groups_1, pnns_groups_2)*
-- **Filter:*** keep only products sold in Spain. *(countries_tags)*
+- **Filter:** keep only products sold in Spain. *(countries_tags)*
 - **Serving and package:** suggest a default amount in the calculator. *(serving_size, serving_quantity, product_quantity)*
 - **Macros (per 100 g):** basic nutrition. carbohydrates_100g is the key column. *(energy-kcal_100g, fat_100g, saturated-fat_100g, carbohydrates_100g, proteins_100g)*
 - **Diabetes (per 100 g):** show what kind of carbs a product has. *(sugars_100g, added-sugars_100g, glucose_100g, starch_100g, polyols_100g, fiber_100g, glycemic-index_100g)*
@@ -36,7 +36,7 @@ Keep 34 columns.
 - **Who edited each product and when it was created:** not useful for the user.
 
 
-## Day2 - Minimum valid record
+## D2 - Minimum valid record
 <sub>25 October 2026</sub>
 
 ### Context
@@ -58,9 +58,9 @@ A product is only kept if it meets all these rules:
 - The Spain filter uses "contains" instead of exact values. *countries_tags* lists every country where a product is sold (for example *en:portugal,en:spain*), so an exact match would drop products sold in Spain and other countries.
 - Other columns can be empty. Asking for all 34 columns to be filled would remove almost every product.
 
-## Day3 - Almost empty columns
+## D3 - Almost empty columns
 
-<sub>28 October 2026<sub>
+<sub>28 October 2026</sub>
 
 ### Context
 
@@ -85,9 +85,9 @@ Kept as exceptions:
 - ***data_quality_errors_tags (6%):*** here an empty cell means "no errors found", so 6% is the share of products with detected errors.
 
 
-## Day4 - Cleaning and data types
+## D4 - Cleaning and data types
 
-<sub>28 October 2026<sub>
+<sub>28 October 2026</sub>
 
 ### Decision
 
@@ -98,7 +98,7 @@ Kept as exceptions:
 - ***Date:*** *last_modified_datetime* comes as Unix time (seconds since 1 January 1970) and is converted into a normal date.
 
 
-## Day5 - Text cleaning and impossible values
+## D5 - Text cleaning and impossible values
 <sub>29 October 2026</sub>
 
 ### Context
@@ -122,3 +122,25 @@ Keep 30 columns and 246,846 products.
 - Similar names (for example several "Paleta de Teruel") are not merged: each one has its own barcode and is a different product.
 - Brands with a real hyphen (Coca-Cola) lose it. A small cost compared to the brands it fixes.
 - *serving_size* is not cleaned: *serving_quantity* already has the same value as a clean number.
+
+
+## D6 - Search order
+<sub>30 October 2026</sub>
+
+### Context
+
+The search sheet shows only the first 20 matches, so the order decides what the user sees. The only popularity data in the export is *unique_scans_n*, the number of people who scanned the product. It counts scans from every country, not only Spain, and France has the most Open Food Facts users.
+
+### Decision
+
+Sort by *unique_scans_n*, then by *completeness*.
+
+- ***Popularity first:*** the products people really buy come first.
+- ***Completeness second:*** many products have few or no scans, so ties are common. The product with more data wins.
+- ***Known bias:*** the ranking leans towards products that are popular in France. With a search term this barely matters, because the matches already have Spanish names.
+
+### Discarded
+
+- ***Spanish barcodes first (prefix 840-849):*** the prefix shows where the company registered the code, not where the product is sold. Products like Nutella would fall below unknown products with no scans.
+- ***Completeness first:*** well-documented products that nobody buys would come first.
+- ***Most popular products when the search is empty:*** most of them have French names. The sheet asks the user to type instead.
