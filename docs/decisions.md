@@ -170,7 +170,7 @@ A product matches when every word typed is in its name or brand, or when the bar
 
 ### Rules
 
-- Accents are not ignored yet: "maria" doesn't find "María".
+- Accents are ignored since D12: "maria" finds "María".
 
 ### Discarded
 
@@ -178,7 +178,7 @@ A product matches when every word typed is in its name or brand, or when the bar
 - ***Any word instead of every word:*** each extra word would return more products instead of fewer.
 
 
-## D7.1 - Search results
+## D8 - Search results
 <sub>31 October 2026</sub>
 
 ### Context
@@ -192,7 +192,7 @@ Show 13 columns: photo, barcode, name, brand, package, carbs, portions, sugars, 
 - ***Nutrients per 100 g:*** carbs first, because the workbook is about carb counting. Sugars, fat and protein are added because they change how fast blood glucose rises. Fibre (27% coverage) and salt are left out.
 - ***Portions:*** carbs per 100 g divided by 10. In Spain, 1 carb portion is 10 g of carbs. Insulin doses are not calculated: they depend on each person's ratio and are a medical decision.
 - ***Empty values:*** shown as "–". Without this, Excel shows empty cells as 0, and "0 g of sugar" is not the same as "unknown".
-- ***Data check:*** *nutrition_check* is shown as "✔" or "⚠ Check label". Flagged products (275, 0.1% of the table) stay in the results, but at the end.
+- ***Data check:*** *nutrition_check* is shown as "✔" or "⚠ Check label". Flagged products (11,012, 4.5% of the table, see D10) stay in the results, but at the end.
 - ***Photo:*** loaded from *image_small_url* with IMAGE. The workbook only stores the address, so the photo needs internet.
 - ***Link:*** opens the product page on es.openfoodfacts.org, where the user can see the real label. It is the way to check a product with "⚠ Check label".
 
@@ -207,7 +207,7 @@ Show 13 columns: photo, barcode, name, brand, package, carbs, portions, sugars, 
 - ***Custom portion size:*** every product in the table is sold in Spain, where the portion is 10 g.
 
 
-## D7.2 - Search pages
+## D9 - Search pages
 <sub>31 October 2026</sub>
 
 ### Context
@@ -231,3 +231,62 @@ Show results in pages of 20, 50 or 100, with buttons to move between pages.
 
 - ***"All" option:*** too slow with photos.
 - ***"All" without photos:*** pages solve the same problem and keep the photos.
+
+
+## D10 - Kcal check
+<sub>1 November 2026</sub>
+
+### Context
+
+The rules of D5 only compare macros with each other. Products with impossible kcal passed as "OK": a pack of digestive biscuits showed 3,305 kcal per 100 g.
+
+### Decision
+
+Add two rules to *nutrition_check*. 11,012 products are flagged as "Check" (4.5%), before 275.
+
+- ***Impossible kcal:*** more than 900 kcal per 100 g (590 products). Pure fat, the most energy-dense nutrient, has about 900.
+- ***Kcal that don't match the macros:*** the kcal are calculated with the EU factors (4 per g of carbs without polyols, 2.4 polyols, 4 protein, 9 fat, 2 fibre) and compared with *energy-kcal_100g*. A product is flagged when the difference is more than 50 kcal and more than 50%. The most common cause is kJ written in the kcal field: the value is about 4 times higher.
+
+### Rules
+
+- The second rule only runs when the product has kcal, protein and fat. Missing polyols or fibre count as 0.
+- Flagged products are kept: the user can still find them, with a warning (D8).
+
+### Discarded
+
+- ***Margin of 20% or 30%:*** it flagged 14,554 and 12,878 products. The count barely drops between 20% and 50%, so most errors are big. 50% catches them without flagging small rounding differences.
+- ***Fix the kcal (divide by 4.184):*** there is no way to know if the wrong value is the kcal or the macros.
+
+
+## D11 - Capital first letter
+<sub>1 November 2026</sub>
+
+### Context
+
+D5 only fixes names written all in caps or all in lowercase. Mixed names that start with a lowercase letter, like "galleta Deco", stayed as they were.
+
+### Decision
+
+Every product name starts with a capital letter. The rest of the name is not changed, so abbreviations like "D.O.P." stay.
+
+
+## D12 - Search without accents
+<sub>1 November 2026</sub>
+
+### Context
+
+Excel's SEARCH doesn't ignore accents, and each user writes names their own way. "maria" didn't find "Galletas María", and "maría" didn't find "Galletas Maria Sin Gluten".
+
+### Decision
+
+Add two search columns: *search_name* and *search_brand*, the name and brand in lowercase and without accents. The search text is cleaned the same way in Excel (*SearchKey*). Now "maria" and "maría" return the same 555 products.
+
+### Rules
+
+- The columns are only used to search. The search sheet still shows the original name and brand.
+- They are added at the end of the table (columns 31 and 32), so the column positions used by the search sheet don't change.
+- "ñ" becomes "n" on both sides, so "espana" also finds "españa".
+
+### Discarded
+
+- ***Clean the names in Excel:*** it would clean 246,846 names again on every search. Power Query does it once, when the data is loaded.

@@ -6,13 +6,20 @@
 
 Stored in Formulas > Name Manager. Each one is used by several cells.
 
-**SearchHits**
+**SearchKey**
 ```
-=LET(words, TEXTSPLIT(TRIM(SearchTerm), " "), text, tblProducts[product_name] & " " & tblProducts[brands_en], found, ISNUMBER(SEARCH(words, text)), BYROW(found, LAMBDA(r, AND(r))) + (tblProducts[code] = SearchTerm))
+=REDUCE(LOWER(SearchTerm), {"áa","àa","ée","èe","íi","ïi","óo","òo","úu","üu","ñn","çc"}, LAMBDA(t, p, SUBSTITUTE(t, LEFT(p), RIGHT(p))))
 ```
 
-- **words:** TRIM removes extra spaces and TEXTSPLIT cuts the search by spaces: "galleta gullon" becomes {"galleta", "gullon"}.
-- **text:** name and brand of each product joined in one text.
+LOWER turns the search into lowercase. REDUCE goes through each pair (accented letter and plain letter) and SUBSTITUTE replaces the first letter with the second. "MARÍA" becomes "maria". It does the same as *Unaccent* in *qSource* (D12).
+
+**SearchHits**
+```
+=LET(words, TEXTSPLIT(TRIM(SearchKey), " "), text, tblProducts[search_name] & " " & tblProducts[search_brand], found, ISNUMBER(SEARCH(words, text)), BYROW(found, LAMBDA(r, AND(r))) + (tblProducts[code] = SearchTerm))
+```
+
+- **words:** TRIM removes extra spaces and TEXTSPLIT cuts the clean search (*SearchKey*) by spaces: "galleta gullon" becomes {"galleta", "gullon"}.
+- **text:** name and brand of each product without accents (*search_name* and *search_brand*), joined in one text.
 - **found:** SEARCH looks for every word in every product. The result is a TRUE/FALSE grid: one row per product, one column per word.
 - **Result:** BYROW applies AND to each row, so a product is TRUE only if all the words are found. The barcode check adds 1 when the code is exactly the search. The `+` works as OR.
 
@@ -64,7 +71,7 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 **1. Find**
 - **words:** the search split into words, the same as in *SearchHits*.
 - **hits:** 1 or 0 for each product, from *SearchHits*.
-- **nameAll:** TRUE when every word is in the name alone, without the brand. Used to sort (D6).
+- **nameAll:** TRUE when every word is in *search_name* alone, without the brand. Used to sort (D6).
 
 **2. Filter**
 - **rows:** FILTER keeps the matching rows of *tblProducts*.
@@ -112,4 +119,4 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 =IF(C6 = "", "", HYPERLINK("https://es.openfoodfacts.org/product/" & C6, "View"))
 ```
 
-One formula per row, copied down from N6 to N105. Each row reads the barcode of its own row (column C). Rows without a product stay empty. It is not part of B6 because links inside a spilled result are not clickable (D7.1).
+One formula per row, copied down from N6 to N105. Each row reads the barcode of its own row (column C). Rows without a product stay empty. It is not part of B6 because links inside a spilled result are not clickable (D8).

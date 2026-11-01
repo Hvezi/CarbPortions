@@ -1,14 +1,15 @@
 /*
     qSource
     Reads the Open Food Facts export (.csv.gz), keeps only valid products sold in Spain,
-    cleans text and empty values, sets the data types and flags suspicious values.
+    cleans text and empty values, sets the data types, flags suspicious values
+    and adds two search columns without accents.
     Input:  pFilePath (path to the .csv.gz file)
-    Output: one row per product, 30 columns (see docs/decisions.md, D1 to D5)
+    Output: one row per product, 32 columns (see docs/decisions.md, D1 to D12)
 */
 let
     // ---------- 1. Read the file ----------
 
-    // Read the compressed file from disk
+    // Read the compressed file
     Source = File.Contents(pFilePath),
 
     // Decompress it in memory (the file on disk stays compressed)
@@ -37,7 +38,7 @@ let
     // Must have a product name
     HasName = Table.SelectRows(SpainData, each [product_name] <> null and [product_name] <> ""),
 
-    // Must have carbs per 100 g (needed by the calculator)
+    // Must have carbs per 100 g
     HasCarbs = Table.SelectRows(HasName, each [carbohydrates_100g] <> null and [carbohydrates_100g] <> ""),
 
     // ---------- 3. Drop almost empty columns (D3) ----------
@@ -47,7 +48,7 @@ let
 
     // ---------- 4. Clean empty values (D4) ----------
 
-    // Empty text ("") becomes a real empty value (null) in every column
+    // Empty text ("") becomes a real empty value (null)
     EmptyToNull = Table.ReplaceValue(DropSparse, "", null, Replacer.ReplaceValue, Table.ColumnNames(DropSparse)),
 
     // The text "unknown" also becomes null ("not-applicable" is kept on purpose)
@@ -67,23 +68,36 @@ let
     // Unix time (seconds since 1 January 1970) to a normal date and time
     UnixToDate = Table.TransformColumns(Round2, {{"last_modified_datetime", each #datetime(1970, 1, 1, 0, 0, 0) + #duration(0, 0, 0, Number.FromText(_)), type datetime}}),
 
-    // ---------- 6. Clean text (D5) ----------
+    // ---------- 6. Clean text (D5, D11) ----------
 
-    // Product name: fix spaces, and fix caps only when the whole name is in caps or in lowercase. Brand: first brand only, hyphens to spaces, capital at the start of each word. Category: remove language prefix (es:), hyphens to spaces, first letter in caps
-    CleanText = Table.TransformColumns(UnixToDate, {{"product_name", each let t = Text.Combine(List.Select(Text.Split(Text.Clean(_), " "), each _ <> ""), " ") in if t = Text.Upper(t) or t = Text.Lower(t) then Text.Upper(Text.Start(t, 1)) & Text.Lower(Text.Middle(t, 1)) else t, type text}, {"brands_en", each if _ = null then null else Text.Proper(Text.Replace(Text.Trim(Text.BeforeDelimiter(_, ",")), "-", " ")), type text}, {"main_category_en", each if _ = null then null else let t = Text.Replace(if Text.Contains(_, ":") then Text.AfterDelimiter(_, ":") else _, "-", " ") in Text.Upper(Text.Start(t, 1)) & Text.Middle(t, 1), type text}}),
+    // Product name: fix spaces; names in all caps or all lowercase become "First letter in caps", other names only get a capital first letter. Brand: first brand only, hyphens to spaces, capital at the start of each word. Category: remove language prefix (es:), hyphens to spaces, first letter in caps
+    CleanText = Table.TransformColumns(UnixToDate, {{"product_name", each let t = Text.Combine(List.Select(Text.Split(Text.Clean(_), " "), each _ <> ""), " ") in if t = Text.Upper(t) or t = Text.Lower(t) then Text.Upper(Text.Start(t, 1)) & Text.Lower(Text.Middle(t, 1)) else Text.Upper(Text.Start(t, 1)) & Text.Middle(t, 1), type text}, {"brands_en", each if _ = null then null else Text.Proper(Text.Replace(Text.Trim(Text.BeforeDelimiter(_, ",")), "-", " ")), type text}, {"main_category_en", each if _ = null then null else let t = Text.Replace(if Text.Contains(_, ":") then Text.AfterDelimiter(_, ":") else _, "-", " ") in Text.Upper(Text.Start(t, 1)) & Text.Middle(t, 1), type text}}),
 
     // Remove a final dot only when the last word has one dot (keeps "D.O.P.")
     RemoveFinalDot = Table.TransformColumns(CleanText, {{"product_name", each let lastWord = List.Last(Text.Split(_, " ")) in if Text.EndsWith(_, ".") and Text.Length(Text.Select(lastWord, ".")) = 1 then Text.Start(_, Text.Length(_) - 1) else _, type text}}),
 
-    // ---------- 7. Check values (D5) ----------
+    // ---------- 7. Check values (D5, D10) ----------
 
     // Remove impossible carbs: below 0 g or above 100 g per 100 g
     ValidCarbs = Table.SelectRows(RemoveFinalDot, each [carbohydrates_100g] >= 0 and [carbohydrates_100g] <= 100),
 
-    // Flag suspicious values: sugars > carbs, saturated fat > fat, or fat + carbs + proteins above 105 g
-    NutritionCheck = Table.AddColumn(ValidCarbs, "nutrition_check", each let carbs = [carbohydrates_100g], sugars = [sugars_100g], fat = [fat_100g], sat = [#"saturated-fat_100g"], total = List.Sum(List.RemoveNulls({[fat_100g], [carbohydrates_100g], [proteins_100g]})) in if (sugars <> null and sugars > carbs) or (sat <> null and fat <> null and sat > fat) or total > 105 then "Check" else "OK", type text),
+    // Flag suspicious values: sugars > carbs, saturated fat > fat, fat + carbs + proteins above 105 g, kcal above 900, or kcal far from the kcal calculated from the macros (more than 50 kcal and 50%)
+    NutritionCheck = Table.AddColumn(ValidCarbs, "nutrition_check", each let carbs = [carbohydrates_100g], sugars = [sugars_100g], fat = [fat_100g], sat = [#"saturated-fat_100g"], protein = [proteins_100g], kcal = [#"energy-kcal_100g"], polyols = if [polyols_100g] = null then 0 else [polyols_100g], fiber = if [fiber_100g] = null then 0 else [fiber_100g], total = List.Sum(List.RemoveNulls({fat, carbs, protein})), calc = 4 * (carbs - polyols) + 2.4 * polyols + 4 * protein + 9 * fat + 2 * fiber, kcalOff = kcal <> null and protein <> null and fat <> null and Number.Abs(kcal - calc) > 50 and Number.Abs(kcal - calc) > 0.5 * calc in if (sugars <> null and sugars > carbs) or (sat <> null and fat <> null and sat > fat) or total > 105 or (kcal <> null and kcal > 900) or kcalOff then "Check" else "OK", type text),
 
-        // Remove rows with errors: their columns are shifted in the original file, so no value can be trusted
-    RemoveErrors = Table.RemoveRowsWithErrors(NutritionCheck)
+    // ---------- 8. Search columns (D12) ----------
+
+    // Text to lowercase and without accents
+    Unaccent = (t as text) as text => List.Accumulate({{"á","a"}, {"à","a"}, {"é","e"}, {"è","e"}, {"í","i"}, {"ï","i"}, {"ó","o"}, {"ò","o"}, {"ú","u"}, {"ü","u"}, {"ñ","n"}, {"ç","c"}}, Text.Lower(t), (state, pair) => Text.Replace(state, pair{0}, pair{1})),
+
+    // Product name without accents, used by the search sheet
+    SearchName = Table.AddColumn(NutritionCheck, "search_name", each Unaccent([product_name]), type text),
+
+    // Brand without accents, used by the search sheet (empty text when there is no brand)
+    SearchBrand = Table.AddColumn(SearchName, "search_brand", each if [brands_en] = null then "" else Unaccent([brands_en]), type text),
+
+    // ---------- 9. Remove broken rows (D5) ----------
+
+    // Remove rows with errors: their columns are shifted in the original file, so no value can be trusted
+    RemoveErrors = Table.RemoveRowsWithErrors(SearchBrand)
 in
     RemoveErrors
