@@ -129,18 +129,105 @@ Keep 30 columns and 246,846 products.
 
 ### Context
 
-The search sheet shows only the first 20 matches, so the order decides what the user sees. The only popularity data in the export is *unique_scans_n*, the number of people who scanned the product. It counts scans from every country, not only Spain, and France has the most Open Food Facts users.
+The search sheet shows one page of results at a time, so the order decides what the user sees first. Each product in *tblProducts* has *unique_scans_n*, the number of people who scanned it with the Open Food Facts app. This number is calculated by Open Food Facts for each product, and it includes scans made in any country where the product is sold.
 
 ### Decision
 
-Sort by *unique_scans_n*, then by *completeness*.
+Sort by four rules, each one only breaks ties of the one before.
 
-- ***Popularity first:*** the products people really buy come first.
-- ***Completeness second:*** many products have few or no scans, so ties are common. The product with more data wins.
-- ***Known bias:*** the ranking leans towards products that are popular in France. With a search term this barely matters, because the matches already have Spanish names.
+- ***Reliable data first:*** products with *nutrition_check* = "OK" come before the ones flagged as "Check".
+- ***Name before brand:*** products with every search word in *product_name* come before the ones that only match through *brands_en*. Without this rule, "galleta" showed almost only Gullón products, because their brand is "Galletas Gullón".
+- ***Popularity:*** most scanned first (*unique_scans_n*).
+- ***Completeness:*** many products have few or no scans, so ties are common. The product with more data wins.
+
+### Rules
+
+- Popularity is not only Spanish: a product sold in Spain and France also counts the scans made in France. With a search term this barely matters, because the matches already have Spanish names.
 
 ### Discarded
 
 - ***Spanish barcodes first (prefix 840-849):*** the prefix shows where the company registered the code, not where the product is sold. Products like Nutella would fall below unknown products with no scans.
 - ***Completeness first:*** well-documented products that nobody buys would come first.
 - ***Most popular products when the search is empty:*** most of them have French names. The sheet asks the user to type instead.
+
+
+## D7 - Search match
+<sub>31 October 2026</sub>
+
+### Context
+
+The first version only looked for the exact text inside the product name. Users often remember the brand but not the exact name, type the words in a different order, or have the package in their hands with the barcode.
+
+### Decision
+
+A product matches when every word typed is in its name or brand, or when the barcode is exactly the same.
+
+- ***Several words:*** the text is split by spaces. "galleta gullon" and "gullon galleta" return the same products.
+- ***Name and brand:*** both are searched together, so the user can type the brand without knowing where it is stored.
+- ***Not case sensitive:*** "leche" finds "Leche entera".
+- ***Barcode:*** exact match only. A partial code like "8410" would match thousands of products.
+- ***Input as text:*** the search cell is formatted as text, so barcodes keep their leading zeros and don't turn into numbers like 8.41E+12.
+
+### Rules
+
+- Accents are not ignored yet: "maria" doesn't find "María".
+
+### Discarded
+
+- ***Exact phrase in the name:*** "galleta gullon" found nothing, because no name has both words together.
+- ***Any word instead of every word:*** each extra word would return more products instead of fewer.
+
+
+## D7.1 - Search results
+<sub>31 October 2026</sub>
+
+### Context
+
+*tblProducts* has 30 columns, most of them for analysis or data quality. The search sheet only needs what helps the user recognise a product and count its carbs.
+
+### Decision
+
+Show 13 columns: photo, barcode, name, brand, package, carbs, portions, sugars, fat, protein, kcal, data check and link.
+
+- ***Nutrients per 100 g:*** carbs first, because the workbook is about carb counting. Sugars, fat and protein are added because they change how fast blood glucose rises. Fibre (27% coverage) and salt are left out.
+- ***Portions:*** carbs per 100 g divided by 10. In Spain, 1 carb portion is 10 g of carbs. Insulin doses are not calculated: they depend on each person's ratio and are a medical decision.
+- ***Empty values:*** shown as "–". Without this, Excel shows empty cells as 0, and "0 g of sugar" is not the same as "unknown".
+- ***Data check:*** *nutrition_check* is shown as "✔" or "⚠ Check label". Flagged products (275, 0.1% of the table) stay in the results, but at the end.
+- ***Photo:*** loaded from *image_small_url* with IMAGE. The workbook only stores the address, so the photo needs internet.
+- ***Link:*** opens the product page on es.openfoodfacts.org, where the user can see the real label. It is the way to check a product with "⚠ Check label".
+
+### Rules
+
+- The link column is one formula per row (N6:N105), not part of the main formula. Links inside a spilled result are not clickable. If a page size above 100 is added, the column has to be extended.
+
+### Discarded
+
+- ***All 30 columns:*** most of them are not useful to find a product.
+- ***Hide flagged products:*** a user who searches their own barcode would get "No results" for a product that is in the table.
+- ***Custom portion size:*** every product in the table is sold in Spain, where the portion is 10 g.
+
+
+## D7.2 - Search pages
+<sub>31 October 2026</sub>
+
+### Context
+
+"galleta" returns 2,661 products. Showing all of them with photos took more than 4 minutes, because each photo is downloaded from the internet. 20 or 50 products took about 5 seconds.
+
+### Decision
+
+Show results in pages of 20, 50 or 100, with buttons to move between pages.
+
+- ***Page size:*** chosen by the user in a dropdown.
+- ***Counter:*** shows which products are on screen and the total ("Showing 51-100 of 2,661").
+- ***Page limit:*** a page number above the last page shows the last page.
+- ***Shared calculations:*** the matches, the total, the number of pages and the current page are named formulas. The results, the counter and the page total use the same names, so they can't disagree.
+
+### Rules
+
+- The page number doesn't go back to 1 when the search changes.
+
+### Discarded
+
+- ***"All" option:*** too slow with photos.
+- ***"All" without photos:*** pages solve the same problem and keep the photos.

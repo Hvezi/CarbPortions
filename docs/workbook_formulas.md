@@ -1,0 +1,115 @@
+# Workbook formulas
+
+## Search
+
+### Named formulas
+
+Stored in Formulas > Name Manager. Each one is used by several cells.
+
+**SearchHits**
+```
+=LET(words, TEXTSPLIT(TRIM(SearchTerm), " "), text, tblProducts[product_name] & " " & tblProducts[brands_en], found, ISNUMBER(SEARCH(words, text)), BYROW(found, LAMBDA(r, AND(r))) + (tblProducts[code] = SearchTerm))
+```
+
+- **words:** TRIM removes extra spaces and TEXTSPLIT cuts the search by spaces: "galleta gullon" becomes {"galleta", "gullon"}.
+- **text:** name and brand of each product joined in one text.
+- **found:** SEARCH looks for every word in every product. The result is a TRUE/FALSE grid: one row per product, one column per word.
+- **Result:** BYROW applies AND to each row, so a product is TRUE only if all the words are found. The barcode check adds 1 when the code is exactly the search. The `+` works as OR.
+
+**SearchTotal**
+```
+=SUM(SIGN(SearchHits))
+```
+
+SIGN turns every match into 1 (a product can be 2 if it matches by name and barcode) and SUM counts them.
+
+**SearchPages**
+```
+=MAX(1, ROUNDUP(SearchTotal / ResultLimit, 0))
+```
+
+Matches divided by products per page, rounded up: 2,661 / 50 = 53.2, so 54 pages. MAX keeps it at 1 when there are no matches.
+
+**CurrentPage**
+```
+=MIN(MAX(PageNumber, 1), SearchPages)
+```
+
+MAX stops pages below 1 and MIN stops pages above the last one. If the user asks for page 999 of 54, page 54 is shown.
+
+### Results (cell B6)
+
+```
+=LET(
+    words, TEXTSPLIT(TRIM(SearchTerm), " "),
+    hits, SearchHits,
+    nameAll, BYROW(ISNUMBER(SEARCH(words, tblProducts[product_name])), LAMBDA(r, AND(r))),
+    rows, FILTER(tblProducts, hits),
+    check, FILTER(tblProducts[nutrition_check], hits),
+    inName, FILTER(nameAll, hits),
+    scans, FILTER(tblProducts[unique_scans_n], hits),
+    compl, FILTER(tblProducts[completeness], hits),
+    sorted, SORTBY(rows, check = "OK", -1, inName, -1, scans, -1, compl, -1),
+    page, CurrentPage,
+    top, TAKE(DROP(sorted, (page - 1) * ResultLimit), ResultLimit),
+    portions, ROUND(CHOOSECOLS(top, 15) / 10, 1),
+    data, IF(CHOOSECOLS(top, 30) = "OK", "✔", "⚠ Check label"),
+    cols, HSTACK(CHOOSECOLS(top, 1, 2, 3, 11, 15), portions, CHOOSECOLS(top, 17, 13, 16, 12), data),
+    clean, IF(cols = "", "–", cols),
+    photo, IFERROR(IMAGE(CHOOSECOLS(top, 4)), "–"),
+    IF(SearchTerm = "", "Type a product name or barcode", IF(OR(hits), HSTACK(photo, clean), "No results"))
+)
+```
+
+**1. Find**
+- **words:** the search split into words, the same as in *SearchHits*.
+- **hits:** 1 or 0 for each product, from *SearchHits*.
+- **nameAll:** TRUE when every word is in the name alone, without the brand. Used to sort (D6).
+
+**2. Filter**
+- **rows:** FILTER keeps the matching rows of *tblProducts*.
+- **check, inName, scans, compl:** the four sort columns, filtered the same way so they have the same size as *rows*.
+
+**3. Sort**
+- **sorted:** SORTBY with four rules, each one breaks ties of the one before: reliable data first, all words in the name, most scanned, most complete. `-1` means largest first, and TRUE counts as larger than FALSE.
+
+**4. Page**
+- **page:** the page to show, from *CurrentPage*.
+- **top:** DROP removes the rows of the pages before, and TAKE keeps one page. Page 3 of 50: drop 100, take 50.
+
+**5. Build the columns**
+- **portions:** column 15 (*carbohydrates_100g*) divided by 10, with 1 decimal.
+- **data:** column 30 (*nutrition_check*) shown as "✔" or "⚠ Check label".
+- **cols:** HSTACK joins the columns in order: CHOOSECOLS picks columns of *tblProducts* by position (1 code, 2 name, 3 brand, 11 package, 15 carbs, 17 sugars, 13 fat, 16 protein, 12 kcal), and the calculated *portions* and *data* go in their place.
+- **clean:** empty cells become "–". A real 0 stays 0.
+- **photo:** IMAGE downloads the photo from column 4 (*image_small_url*). IFERROR shows "–" when there is no photo. It is added after *clean* because a photo is not text or a number.
+
+**6. Show**
+- Empty search: "Type a product name or barcode".
+- No match (OR finds no 1 in *hits*): "No results".
+- Otherwise: photo on the left and the clean columns on the right.
+
+### Counter (cell F3)
+
+```
+=IF(SearchTerm = "", "", IF(SearchTotal = 0, "", LET(first, (CurrentPage - 1) * ResultLimit + 1, last, MIN(CurrentPage * ResultLimit, SearchTotal), "Showing " & TEXT(first, "#,##0") & "–" & TEXT(last, "#,##0") & " of " & TEXT(SearchTotal, "#,##0"))))
+```
+
+- **first:** first product of the page. Page 54 of 50: (54 - 1) × 50 + 1 = 2,651.
+- **last:** last product of the page. MIN stops it at the total on the last page.
+- **TEXT:** adds the thousands separator (2,661).
+- Empty when there is no search or no match.
+
+### Page total (cell K3)
+
+```
+=IF(SearchTerm = "", "", IF(SearchTotal = 0, "", "of " & SearchPages))
+```
+
+### Links (cells N6:N105)
+
+```
+=IF(C6 = "", "", HYPERLINK("https://es.openfoodfacts.org/product/" & C6, "View"))
+```
+
+One formula per row, copied down from N6 to N105. Each row reads the barcode of its own row (column C). Rows without a product stay empty. It is not part of B6 because links inside a spilled result are not clickable (D7.1).

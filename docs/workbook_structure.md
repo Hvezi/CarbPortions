@@ -16,10 +16,30 @@ Clean product table, loaded by the Power Query query *qSource* (code in *powerqu
 
 ## Search
 
-Finds products by name or barcode and shows the 20 most popular matches.
+Finds products by name, brand or barcode and shows them in pages, with photo, nutrients per 100 g and a link to the product page.
 
-- **Input (SearchTerm, cell C3):** product name or barcode. The cell is formatted as text, so barcodes keep their leading zeros.
-- **Results (cell B6):** one LET formula that spills the matching rows of *tblProducts*.
-- **Match:** the name contains the text (not case sensitive) or the barcode is exactly the same.
-- **Order:** most scanned first (*unique_scans_n*), then most complete (*completeness*). Only the first 20 are shown.
-- **Messages:** "Type a product name or barcode" when the input is empty and "No results" when nothing matches.
+### Inputs
+
+- **SearchTerm (cell C3):** product name, brand or barcode typed by the user. Formatted as text, so barcodes keep their leading zeros.
+- **ResultLimit (cell E3):** products per page. Dropdown (data validation) with 20, 50 or 100.
+- **PageNumber (cell I3):** page asked by the user. Changed with the spin button next to it (minimum 1, maximum 999).
+
+### Named formulas
+
+Calculations stored in the Name Manager, not in cells. Several cells use them, so each one is calculated in one place only.
+
+- **SearchHits:** list with one value per product of *tblProducts*: 1 if it matches the search, 0 if not.
+- **SearchTotal:** number of matching products (sum of *SearchHits*).
+- **SearchPages:** number of pages: *SearchTotal* divided by *ResultLimit*, rounded up. Never less than 1.
+- **CurrentPage:** page really shown: *PageNumber* kept between 1 and *SearchPages*.
+
+### Outputs
+
+- **Results (cell B6):** one formula that spills the products of the current page: photo, barcode, name, brand, package, carbs, portions, sugars, fat, protein, kcal and data check.
+- **Headers (B5:N5):** fixed text, not part of the formula. If the columns of the formula change order, the headers have to be moved by hand.
+- **Counter (cell F3):** products on screen and total ("Showing 51–100 of 2,661"). Empty when there is no search or no match.
+- **Page total (cell K3):** number of pages ("of 54").
+- **Links (N6:N105):** one formula per row that builds a "View" link to the product page from the barcode in column C. Empty in rows without a product.
+- **Messages:** "Type a product name or barcode" when the search is empty and "No results" when nothing matches.
+
+Formulas and how they work: *docs/workbook_formulas.md*. Decisions: D6 to D7.2.
