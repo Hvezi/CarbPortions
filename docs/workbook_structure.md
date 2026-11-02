@@ -42,5 +42,6 @@ Calculations stored in the Name Manager, not in cells. Several cells use them, s
 - **Page total (cell K3):** number of pages ("of 54").
 - **Links (N6:N105):** one formula per row that builds a "View" link to the product page from the barcode in column C. Empty in rows without a product.
 - **Messages:** "Type a product name or barcode" when the search is empty and "No results" when nothing matches.
+- **Macro:** when *SearchTerm* or *ResultLimit* changes, *PageNumber* goes back to 1. Code in *vba/Search.cls*.
 
 Formulas and how they work: *docs/workbook_formulas.md*.

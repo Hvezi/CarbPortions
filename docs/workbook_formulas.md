@@ -48,19 +48,21 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 
 ```
 =LET(
-    words, TEXTSPLIT(TRIM(SearchTerm), " "),
+    words, TEXTSPLIT(TRIM(SearchKey), " "),
     hits, SearchHits,
-    nameAll, BYROW(ISNUMBER(SEARCH(words, tblProducts[product_name])), LAMBDA(r, AND(r))),
-    rows, FILTER(tblProducts, hits),
+    nameAll, BYROW(ISNUMBER(SEARCH(words, tblProducts[search_name])), LAMBDA(r, AND(r))),
     check, FILTER(tblProducts[nutrition_check], hits),
+    errs, FILTER(tblProducts[data_quality_errors_tags], hits),
+    level, IF(check = "Check", 3, IF(ISNUMBER(SEARCH("nutrition", errs)), 2, 1)),
+    rows, HSTACK(FILTER(tblProducts, hits), level),
     inName, FILTER(nameAll, hits),
     scans, FILTER(tblProducts[unique_scans_n], hits),
     compl, FILTER(tblProducts[completeness], hits),
-    sorted, SORTBY(rows, check = "OK", -1, inName, -1, scans, -1, compl, -1),
+    sorted, SORTBY(rows, level, 1, inName, -1, scans, -1, compl, -1),
     page, CurrentPage,
     top, TAKE(DROP(sorted, (page - 1) * ResultLimit), ResultLimit),
     portions, ROUND(CHOOSECOLS(top, 15) / 10, 1),
-    data, IF(CHOOSECOLS(top, 30) = "OK", "✔", "⚠ Check label"),
+    data, CHOOSE(CHOOSECOLS(top, 33), "✔", "Minor issue", "⚠ Check label"),
     cols, HSTACK(CHOOSECOLS(top, 1, 2, 3, 11, 15), portions, CHOOSECOLS(top, 17, 13, 16, 12), data),
     clean, IF(cols = "", "–", cols),
     photo, IFERROR(IMAGE(CHOOSECOLS(top, 4)), "–"),
@@ -69,29 +71,33 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 ```
 
 **1. Find**
-- **words:** the search split into words, the same as in *SearchHits*.
+- **words:** the clean search split into words, the same as in *SearchHits*.
 - **hits:** 1 or 0 for each product, from *SearchHits*.
 - **nameAll:** TRUE when every word is in *search_name* alone, without the brand. Used to sort (D6).
 
-**2. Filter**
-- **rows:** FILTER keeps the matching rows of *tblProducts*.
-- **check, inName, scans, compl:** the four sort columns, filtered the same way so they have the same size as *rows*.
+**2. Reliability level (D13)**
+- **check, errs:** *nutrition_check* and *data_quality_errors_tags* of the matching products.
+- **level:** 3 (red) if *check* is "Check"; otherwise 2 (amber) if an error contains "nutrition"; otherwise 1 (green). An empty error cell makes SEARCH fail, so ISNUMBER returns FALSE and the level is 1.
 
-**3. Sort**
-- **sorted:** SORTBY with four rules, each one breaks ties of the one before: reliable data first, all words in the name, most scanned, most complete. `-1` means largest first, and TRUE counts as larger than FALSE.
+**3. Filter**
+- **rows:** FILTER keeps the matching rows of *tblProducts*, and HSTACK adds *level* as an extra column at the end (column 33, after the 32 columns of the table).
+- **inName, scans, compl:** the other sort columns, filtered the same way so they have the same size as *rows*.
 
-**4. Page**
+**4. Sort**
+- **sorted:** SORTBY with four rules, each one breaks ties of the one before: reliability level (1 first), all words in the name, most scanned, most complete. `1` means smallest first and `-1` largest first. TRUE counts as larger than FALSE.
+
+**5. Page**
 - **page:** the page to show, from *CurrentPage*.
 - **top:** DROP removes the rows of the pages before, and TAKE keeps one page. Page 3 of 50: drop 100, take 50.
 
-**5. Build the columns**
+**6. Build the columns**
 - **portions:** column 15 (*carbohydrates_100g*) divided by 10, with 1 decimal.
-- **data:** column 30 (*nutrition_check*) shown as "✔" or "⚠ Check label".
+- **data:** CHOOSE turns the level (column 33) into its text: 1 "✔", 2 "Minor issue", 3 "⚠ Check label".
 - **cols:** HSTACK joins the columns in order: CHOOSECOLS picks columns of *tblProducts* by position (1 code, 2 name, 3 brand, 11 package, 15 carbs, 17 sugars, 13 fat, 16 protein, 12 kcal), and the calculated *portions* and *data* go in their place.
 - **clean:** empty cells become "–". A real 0 stays 0.
 - **photo:** IMAGE downloads the photo from column 4 (*image_small_url*). IFERROR shows "–" when there is no photo. It is added after *clean* because a photo is not text or a number.
 
-**6. Show**
+**7. Show**
 - Empty search: "Type a product name or barcode".
 - No match (OR finds no 1 in *hits*): "No results".
 - Otherwise: photo on the left and the clean columns on the right.

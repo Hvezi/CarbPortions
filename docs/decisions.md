@@ -135,7 +135,7 @@ The search sheet shows one page of results at a time, so the order decides what 
 
 Sort by four rules, each one only breaks ties of the one before.
 
-- ***Reliable data first:*** products with *nutrition_check* = "OK" come before the ones flagged as "Check".
+- ***Reliable data first:*** green, then amber, then red products (D13).
 - ***Name before brand:*** products with every search word in *product_name* come before the ones that only match through *brands_en*. Without this rule, "galleta" showed almost only Gullón products, because their brand is "Galletas Gullón".
 - ***Popularity:*** most scanned first (*unique_scans_n*).
 - ***Completeness:*** many products have few or no scans, so ties are common. The product with more data wins.
@@ -192,7 +192,7 @@ Show 13 columns: photo, barcode, name, brand, package, carbs, portions, sugars, 
 - ***Nutrients per 100 g:*** carbs first, because the workbook is about carb counting. Sugars, fat and protein are added because they change how fast blood glucose rises. Fibre (27% coverage) and salt are left out.
 - ***Portions:*** carbs per 100 g divided by 10. In Spain, 1 carb portion is 10 g of carbs. Insulin doses are not calculated: they depend on each person's ratio and are a medical decision.
 - ***Empty values:*** shown as "–". Without this, Excel shows empty cells as 0, and "0 g of sugar" is not the same as "unknown".
-- ***Data check:*** *nutrition_check* is shown as "✔" or "⚠ Check label". Flagged products (11,012, 4.5% of the table, see D10) stay in the results, but at the end.
+- ***Data check:*** each product shows "✔", "Minor issue" or "⚠ Check label" (D13). Flagged products stay in the results, but at the end.
 - ***Photo:*** loaded from *image_small_url* with IMAGE. The workbook only stores the address, so the photo needs internet.
 - ***Link:*** opens the product page on es.openfoodfacts.org, where the user can see the real label. It is the way to check a product with "⚠ Check label".
 
@@ -225,7 +225,9 @@ Show results in pages of 20, 50 or 100, with buttons to move between pages.
 
 ### Rules
 
-- The page number doesn't go back to 1 when the search changes.
+- ### Rules
+
+- A macro sets the page back to 1 when the search or the page size changes (*vba/Search.cls*).
 
 ### Discarded
 
@@ -290,3 +292,29 @@ Add two search columns: *search_name* and *search_brand*, the name and brand in 
 ### Discarded
 
 - ***Clean the names in Excel:*** it would clean 246,846 names again on every search. Power Query does it once, when the data is loaded.
+
+
+## D13 - Data reliability levels
+<sub>2 November 2026</sub>
+
+### Context
+
+The data check of D8 only had two states, based on *nutrition_check*. *data_quality_errors_tags* lists the errors that Open Food Facts finds in each product, and it was not used yet. Most of its errors check the same things as *nutrition_check*, but with stricter limits.
+
+### Decision
+
+Show three reliability levels in the search sheet.
+
+- ***Green ("✔"):*** passes *nutrition_check* and Open Food Facts finds no nutrition errors. 230,921 products (93.5%).
+- ***Amber ("Minor issue"):*** passes *nutrition_check*, but Open Food Facts finds a nutrition error, like kcal that don't fully match the macros. 4,913 products (2.0%).
+- ***Red ("⚠ Check label"):*** fails *nutrition_check*. 11,012 products (4.5%).
+
+### Rules
+
+- Only errors that contain "nutrition" count. 373 products whose only errors are about categories (for example, tagged as a drink and as a meal) stay green, because those errors don't change the numbers.
+- The level is calculated in the search sheet, not in Power Query, so it doesn't need a refresh.
+
+### Discarded
+
+- ***Any Open Food Facts error as amber:*** category errors don't affect carbs.
+- ***Low completeness as amber:*** a missing brand or photo doesn't mean the carbs are wrong.
