@@ -45,3 +45,16 @@ Calculations stored in the Name Manager, not in cells. Several cells use them, s
 - **Macro:** when *SearchTerm* or *ResultLimit* changes, *PageNumber* goes back to 1. Code in *vba/Search.cls*.
 
 Formulas and how they work: *docs/workbook_formulas.md*.
+
+## Calculator
+
+Adds up the carbs and portions of a meal from the barcode and the amount of each food.
+
+- **Table (tblMeal, B5:F15):** 10 rows, one per food, and a total row (row 16). Empty rows show nothing.
+- **Inputs:** *Barcode* (formatted as text) and *Amount (g or ml)*, typed by the user. The barcode can be copied from Search: Ctrl + C, then Ctrl + Shift + V to paste only the value.
+- **Product:** name of the product, to check that the barcode is the right one. "Not found" if the barcode is not in *tblProducts*.
+- **Carbs (g):** carbs in the amount eaten.
+- **Portions:** carbs divided by 10.
+- **Total row:** carbs and portions of the whole meal.
+
+Formulas: *docs/workbook_formulas.md*. Decisions: D14.

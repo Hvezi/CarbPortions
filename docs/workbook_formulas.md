@@ -126,3 +126,39 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 ```
 
 One formula per row, copied down from N6 to N105. Each row reads the barcode of its own row (column C). Rows without a product stay empty. It is not part of B6 because links inside a spilled result are not clickable (D8).
+
+
+## Calculator
+
+All formulas are calculated columns of *tblMeal*: written once, they fill the whole column. `[@Barcode]` means the barcode of the same row.
+
+### Product (column D)
+
+```
+=IF([@Barcode] = "", "", XLOOKUP([@Barcode], tblProducts[code], tblProducts[product_name], "Not found"))
+```
+
+XLOOKUP looks for the barcode in *code* and returns *product_name* from the same row. "Not found" when the barcode doesn't exist. Empty when there is no barcode.
+
+### Carbs (column E)
+
+```
+=IF(OR([@Barcode] = "", [@[Amount (g or ml)]] = ""), "", LET(c, XLOOKUP([@Barcode], tblProducts[code], tblProducts[carbohydrates_100g], ""), IF(c = "", "", ROUND(c * [@[Amount (g or ml)]] / 100, 1))))
+```
+
+- Empty when the barcode or the amount is missing.
+- **c:** carbs per 100 g of the product, with the same XLOOKUP.
+- Carbs per 100 g × amount / 100, with 1 decimal: 78 × 30 / 100 = 23.4.
+
+### Portions (column F)
+
+```
+=IF([@[Carbs (g)]] = "", "", ROUND([@[Carbs (g)]] / 10, 1))
+```
+
+Carbs of the row divided by 10 (1 portion = 10 g of carbs).
+
+### Total row (row 16)
+
+- **Carbs:** `=SUBTOTAL(109, [Carbs (g)])`, the sum of the column. 109 is the code for SUM, ignoring hidden rows.
+- **Portions:** `=ROUND(SUBTOTAL(109, [Carbs (g)]) / 10, 1)`, calculated from the total carbs. Adding the rounded portions of each row would add up rounding errors.
