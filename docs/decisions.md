@@ -318,3 +318,31 @@ Show three reliability levels in the search sheet.
 
 - ***Any Open Food Facts error as amber:*** category errors don't affect carbs.
 - ***Low completeness as amber:*** a missing brand or photo doesn't mean the carbs are wrong.
+
+
+## D14 - Meal calculator
+<sub>3 November 2026</sub>
+
+### Context
+
+Search shows the carbs per 100 g of each product. A person with type 1 diabetes needs the carbs and portions of what they actually eat.
+
+### Decision
+
+A table where the user types the barcode and the amount of each food, and gets the carbs and portions of each one and of the whole meal.
+
+- ***Barcode, not name:*** a name can match several products (8 "Paleta de Teruel"), a barcode only one.
+- ***Amount typed by the user:*** in g, or in ml for drinks, because their labels give carbs per 100 ml.
+- ***Excel table with 10 rows:*** each column has one formula for every row, and empty rows show nothing.
+- ***Total portions from total carbs:*** not the sum of the rounded portions of each row.
+
+### Rules
+
+- The calculator stops at portions. It doesn't calculate insulin doses: they depend on each person's ratio and other factors.
+
+### Discarded
+
+- ***One spilled formula, like Search:*** Excel tables don't allow formulas that spill.
+- ***Manufacturer serving as default amount:*** only 12% of products have it, and the user knows what they eat.
+- ***Carbs per 100 g and data check columns:*** the user comes from Search, where both are already shown.
+- ***Insulin ratio:*** see Rules.
