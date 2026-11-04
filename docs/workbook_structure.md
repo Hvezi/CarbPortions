@@ -30,7 +30,7 @@ Calculations stored in the Name Manager, not in cells. Several cells use them, s
 
 - **SearchKey:** *SearchTerm* in lowercase and without accents, to compare it with *search_name* and *search_brand*.
 - **SearchHits:** list with one value per product of *tblProducts*: 1 if it matches the search, 0 if not.
-- **SearchTotal:** number of matching products (sum of *SearchHits*).
+- **SearchTotal:** number of matching products. It points to cell P3 (`=SUM(SIGN(SearchHits))`), so it is calculated once and every formula reads the stored value (D15).
 - **SearchPages:** number of pages: *SearchTotal* divided by *ResultLimit*, rounded up. Never less than 1.
 - **CurrentPage:** page really shown: *PageNumber* kept between 1 and *SearchPages*.
 
@@ -56,5 +56,6 @@ Adds up the carbs and portions of a meal from the barcode and the amount of each
 - **Carbs (g):** carbs in the amount eaten.
 - **Portions:** carbs divided by 10.
 - **Total row:** carbs and portions of the whole meal.
+- **Clear button:** empties *Barcode* and *Amount* of every row to start a new meal. Macro *ClearMeal* (*vba/Calculator.bas*).
 
 Formulas: *docs/workbook_formulas.md*. Decisions: D14.

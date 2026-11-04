@@ -346,3 +346,27 @@ A table where the user types the barcode and the amount of each food, and gets t
 - ***Manufacturer serving as default amount:*** only 12% of products have it, and the user knows what they eat.
 - ***Carbs per 100 g and data check columns:*** the user comes from Search, where both are already shown.
 - ***Insulin ratio:*** see Rules.
+
+
+## D15 - Search speed
+<sub>4 November 2026</sub>
+
+### Context
+
+Excel froze during a search and the unsaved work was lost. A named formula is not stored: it is calculated again every time a formula uses it. *SearchHits* (246,846 products × each word) was calculated about 8 times per search, through *SearchTotal*, *SearchPages* and *CurrentPage*. It also used BYROW, which runs a small function once per product.
+
+### Decision
+
+Calculate the search fewer times and in a faster way. Searches with about 5,000 matches ("leche") now work without freezing.
+
+- ***Total in a cell:*** P3 holds the number of matches and *SearchTotal* points to it. *SearchHits* is calculated twice per search instead of about 8 times.
+- ***MMULT instead of BYROW:*** counting the words found in each row with one matrix operation is faster than running a function per row.
+- ***Name check only on matches:*** the "every word in the name" check of D6 runs on the matching products, not on the whole table.
+
+### Rules
+
+- P3 must never be below B6, because the results spill down up to 100 rows.
+
+### Discarded
+
+- ***Manual calculation:*** the user would have to press F9 after every search.

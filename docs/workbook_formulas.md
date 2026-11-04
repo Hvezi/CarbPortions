@@ -15,20 +15,21 @@ LOWER turns the search into lowercase. REDUCE goes through each pair (accented l
 
 **SearchHits**
 ```
-=LET(words, TEXTSPLIT(TRIM(SearchKey), " "), text, tblProducts[search_name] & " " & tblProducts[search_brand], found, ISNUMBER(SEARCH(words, text)), BYROW(found, LAMBDA(r, AND(r))) + (tblProducts[code] = SearchTerm))
+=LET(words, TEXTSPLIT(TRIM(SearchKey), " "), text, tblProducts[search_name] & " " & tblProducts[search_brand], found, ISNUMBER(SEARCH(words, text)), n, COLUMNS(words), (MMULT(--found, SEQUENCE(n, 1, 1, 0)) = n) + (tblProducts[code] = SearchTerm))
 ```
 
 - **words:** TRIM removes extra spaces and TEXTSPLIT cuts the clean search (*SearchKey*) by spaces: "galleta gullon" becomes {"galleta", "gullon"}.
 - **text:** name and brand of each product without accents (*search_name* and *search_brand*), joined in one text.
 - **found:** SEARCH looks for every word in every product. The result is a TRUE/FALSE grid: one row per product, one column per word.
-- **Result:** BYROW applies AND to each row, so a product is TRUE only if all the words are found. The barcode check adds 1 when the code is exactly the search. The `+` works as OR.
+- **n:** number of words.
+- **Result:** `--found` turns TRUE/FALSE into 1/0, and MMULT by a column of ones (SEQUENCE) adds each row: the number of words found in each product. It is 1 only when that number equals *n*. The barcode check adds 1 when the code is exactly the search. The `+` works as OR.
 
 **SearchTotal**
 ```
-=SUM(SIGN(SearchHits))
+=Search!$P$3
 ```
 
-SIGN turns every match into 1 (a product can be 2 if it matches by name and barcode) and SUM counts them.
+Cell P3 holds `=SUM(SIGN(SearchHits))`. SIGN turns every match into 1 (a product can be 2 if it matches by name and barcode) and SUM counts them. A named formula is calculated again every time it is used, so the total lives in a cell and the name only points to it (D15).
 
 **SearchPages**
 ```
@@ -50,12 +51,11 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 =LET(
     words, TEXTSPLIT(TRIM(SearchKey), " "),
     hits, SearchHits,
-    nameAll, BYROW(ISNUMBER(SEARCH(words, tblProducts[search_name])), LAMBDA(r, AND(r))),
     check, FILTER(tblProducts[nutrition_check], hits),
     errs, FILTER(tblProducts[data_quality_errors_tags], hits),
     level, IF(check = "Check", 3, IF(ISNUMBER(SEARCH("nutrition", errs)), 2, 1)),
     rows, HSTACK(FILTER(tblProducts, hits), level),
-    inName, FILTER(nameAll, hits),
+    inName, MMULT(--ISNUMBER(SEARCH(words, FILTER(tblProducts[search_name], hits))), SEQUENCE(COLUMNS(words), 1, 1, 0)) = COLUMNS(words),
     scans, FILTER(tblProducts[unique_scans_n], hits),
     compl, FILTER(tblProducts[completeness], hits),
     sorted, SORTBY(rows, level, 1, inName, -1, scans, -1, compl, -1),
@@ -73,7 +73,6 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 **1. Find**
 - **words:** the clean search split into words, the same as in *SearchHits*.
 - **hits:** 1 or 0 for each product, from *SearchHits*.
-- **nameAll:** TRUE when every word is in *search_name* alone, without the brand. Used to sort (D6).
 
 **2. Reliability level (D13)**
 - **check, errs:** *nutrition_check* and *data_quality_errors_tags* of the matching products.
@@ -81,7 +80,8 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 
 **3. Filter**
 - **rows:** FILTER keeps the matching rows of *tblProducts*, and HSTACK adds *level* as an extra column at the end (column 33, after the 32 columns of the table).
-- **inName, scans, compl:** the other sort columns, filtered the same way so they have the same size as *rows*.
+- **inName:** TRUE when every word is in *search_name* alone, without the brand (D6). The same MMULT count as *SearchHits*, but only on the names of the matching products (D15).
+- **scans, compl:** the other sort columns, filtered the same way so they have the same size as *rows*.
 
 **4. Sort**
 - **sorted:** SORTBY with four rules, each one breaks ties of the one before: reliability level (1 first), all words in the name, most scanned, most complete. `1` means smallest first and `-1` largest first. TRUE counts as larger than FALSE.
