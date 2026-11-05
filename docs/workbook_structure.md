@@ -1,10 +1,15 @@
 # Workbook
 
-## Parameters
+## Settings
 
-Settings of the workbook.
+Information about the data source and the path to the data file.
 
-- **FilePath (cell B1):** path of the Open Food Facts file, calculated with a formula from the folder where the workbook is saved. It works on any computer as long as the file is in *data/raw/*.
+- **Source (cell B3):** link to the Open Food Facts download page.
+- **License (cell B4):** link to the Open Database License (ODbL). The data can be used and shared if the source is credited.
+- **DownloadDate (cell B5):** date when the export was downloaded (21 October 2026). Typed by hand when the file is replaced.
+- **Products (cell B6):** number of products in *tblProducts*, counted with ROWS, so it updates on refresh.
+- **How to refresh (cell B7):** replace the file in *data/raw* and use Data > Refresh All.
+- **FilePath (cell B8):** path of the Open Food Facts file, calculated with a formula from the folder where the workbook is saved. It works on any computer as long as the file is in *data/raw/*.
 
 ## Data
 
