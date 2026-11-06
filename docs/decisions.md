@@ -370,3 +370,33 @@ Calculate the search fewer times and in a faster way. Searches with about 5,000 
 ### Discarded
 
 - ***Manual calculation:*** the user would have to press F9 after every search.
+
+
+## D16 - Data model for the dashboard
+<sub>6 November 2026</sub>
+
+### Context
+
+The dashboard questions need groups and calculations that don't exist as columns: carb bands, the promises on the package, the share of sugar. A normal pivot table can group carbs into bands, but a calculated field on a grouped field returns 0. Formulas outside pivot tables can't be filtered by slicers.
+
+### Decision
+
+Build the dashboard on the Excel Data Model (Power Pivot) with DAX.
+
+- ***Analysis logic in the model:*** DAX columns (*carb_band*, *sugar_free*, *whole_grain*, *gluten_free*, *name_and_brand*) and measures live in the model. The table in the Data sheet doesn't change.
+- ***Only reliable data:*** every measure counts products with *nutrition_check* = "OK" (235,834). The 11,012 flagged products are analysed in the Quality sheet.
+- ***Promises in one chart:*** a small table (*tblLabels*) with the three promises, not related to *tblProducts*. The measures read the promise of each row and use its column.
+- ***Most scanned products:*** only products sold only in Spain (*countries_tags* = "en:spain"). Scans are counted worldwide (D6), so without this filter the top is French.
+
+### Rules
+
+- What goes in Power Query and what goes in the model: Power Query holds what is true for the product in any use and what the sheet formulas need (*nutrition_check*, *search_name*, *search_brand*). The model holds the groups and calculations of a specific analysis, which can change without touching the clean data.
+- The promises are found in *search_name*, so accents and capitals don't matter. "sin azucar" also matches "sin azucares anadidos".
+- The DAX of Power Pivot doesn't have SELECTEDVALUE. HASONEVALUE and VALUES do the same.
+
+### Discarded
+
+- ***New columns in Power Query:*** they would change the clean data for one chart.
+- ***Pivot grouping and calculated fields:*** the calculated field returns 0 on a grouped field.
+- ***Formulas next to the pivot tables:*** slicers don't filter them.
+- ***Slicer for nutrition_check:*** data that doesn't add up is not useful for the user.

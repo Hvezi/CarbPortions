@@ -1,5 +1,6 @@
 # Workbook
 
+
 ## Settings
 
 Information about the data source and the path to the data file.
@@ -11,6 +12,7 @@ Information about the data source and the path to the data file.
 - **How to refresh (cell B7):** replace the file in *data/raw* and use Data > Refresh All.
 - **FilePath (cell B8):** path of the Open Food Facts file, calculated with a formula from the folder where the workbook is saved. It works on any computer as long as the file is in *data/raw/*.
 
+
 ## Data
 
 Clean product table, loaded by the Power Query query *qSource* (code in *powerquery/qSource.pq*).
@@ -18,6 +20,7 @@ Clean product table, loaded by the Power Query query *qSource* (code in *powerqu
 - **Table name:** tblProducts.
 - **Size:** 246,846 products and 32 columns. The last two, *search_name* and *search_brand*, are only used by the search sheet (D12).
 - **Refresh:** Data > Refresh All reads the whole file again and takes a few minutes.
+
 
 ## Search
 
@@ -51,6 +54,7 @@ Calculations stored in the Name Manager, not in cells. Several cells use them, s
 
 Formulas and how they work: *docs/workbook_formulas.md*.
 
+
 ## Calculator
 
 Adds up the carbs and portions of a meal from the barcode and the amount of each food.
@@ -64,3 +68,14 @@ Adds up the carbs and portions of a meal from the barcode and the amount of each
 - **Clear button:** empties *Barcode* and *Amount* of every row to start a new meal. Macro *ClearMeal* (*vba/Calculator.bas*).
 
 Formulas: *docs/workbook_formulas.md*. Decisions: D14.
+
+
+## AnalysisData
+
+Helper sheet with the pivot tables that feed the dashboard. The user doesn't work on it.
+
+- **Data Model:** *tblProducts* and *tblLabels* are loaded into the Data Model (Power Pivot). DAX columns and measures live in the model, so the Data sheet doesn't change (D16).
+- **Pivot tables:** one per question: products by carb band, share of sugar in each band, carbs by package promise, and the 15 most scanned products sold only in Spain.
+- **tblLabels:** the three promises (Sugar free, Whole grain, Gluten free). It gives one row per promise to the promise pivot table.
+
+Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16.

@@ -162,3 +162,40 @@ Carbs of the row divided by 10 (1 portion = 10 g of carbs).
 
 - **Carbs:** `=SUBTOTAL(109, [Carbs (g)])`, the sum of the column. 109 is the code for SUM, ignoring hidden rows.
 - **Portions:** `=ROUND(SUBTOTAL(109, [Carbs (g)]) / 10, 1)`, calculated from the total carbs. Adding the rounded portions of each row would add up rounding errors.
+
+## Data model (DAX)
+
+### Columns
+
+Calculated row by row in the model. They don't exist in the Data sheet.
+
+| Column | Formula | What it does |
+|---|---|---|
+| *carb_band* | `= VAR b = MIN(FLOOR([carbohydrates_100g], 10), 90) RETURN b & "-" & b + 10` | Band of 10 g. FLOOR rounds down, MIN puts 100 g in the last band |
+| *sugar_free* | `= IF(SEARCH("sin azucar", [search_name], 1, 0) + SEARCH("sugar free", [search_name], 1, 0) + SEARCH("0% azucar", [search_name], 1, 0) + SEARCH("zero", [search_name], 1, 0) > 0, "Yes", "No")` | "Yes" if the name has any of the words. SEARCH returns 0 when it doesn't find the text |
+| *whole_grain* | Same with "integral", "whole grain", "wholegrain", "whole wheat" | |
+| *gluten_free* | Same with "sin gluten", "gluten free", "glutenfree" | |
+| *name_and_brand* | `= [product_name] & IF(ISBLANK([brands_en]), "", " · " & [brands_en])` | Name and brand, so products with the same name and different brand don't merge |
+
+### Measures
+
+All of them count only products with *nutrition_check* = "OK".
+
+```
+Products := CALCULATE(COUNTROWS(tblProducts), tblProducts[nutrition_check] = "OK")
+Products % := DIVIDE([Products], CALCULATE([Products], ALL(tblProducts[carb_band])))
+Sugar % := VAR s = CALCULATE(SUM(tblProducts[sugars_100g]), tblProducts[nutrition_check] = "OK", NOT ISBLANK(tblProducts[sugars_100g])) VAR c = CALCULATE(SUM(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK", NOT ISBLANK(tblProducts[sugars_100g])) RETURN DIVIDE(s, c)
+Other carbs % := IF(ISBLANK([Sugar %]), BLANK(), 1 - [Sugar %])
+Avg carbs := CALCULATE(AVERAGE(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK")
+Avg sugars := CALCULATE(AVERAGE(tblProducts[sugars_100g]), tblProducts[nutrition_check] = "OK")
+Carbs with claim := VAR c = IF(HASONEVALUE(tblLabels[Label says]), VALUES(tblLabels[Label says])) RETURN CALCULATE([Avg carbs], FILTER(tblProducts, SWITCH(c, "Sugar free", tblProducts[sugar_free], "Whole grain", tblProducts[whole_grain], "Gluten free", tblProducts[gluten_free]) = "Yes"))
+Carbs without claim := (same, with "No")
+Scans ES := CALCULATE(SUM(tblProducts[unique_scans_n]), tblProducts[nutrition_check] = "OK", tblProducts[countries_tags] = "en:spain")
+Portions per 100 g := CALCULATE(AVERAGE(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK") / 10
+```
+
+- **CALCULATE:** runs a calculation with extra filters. Here, always "OK".
+- **Products %:** ALL removes the band filter, so the bottom of the division is the total of all bands.
+- **Sugar %:** sugar and carbs of the group, only products with sugar data.
+- **Carbs with / without claim:** HASONEVALUE and VALUES read the promise of the row; SWITCH picks its column; FILTER keeps the products with "Yes" (or "No").
+- **Scans ES:** scans of products sold only in Spain.
