@@ -72,10 +72,13 @@ Formulas: *docs/workbook_formulas.md*. Decisions: D14.
 
 ## AnalysisData
 
-Helper sheet with the pivot tables that feed the dashboard. The user doesn't work on it.
+Helper sheet with the pivot tables and charts that feed the dashboard. The user doesn't work on it.
 
-- **Data Model:** *tblProducts* and *tblLabels* are loaded into the Data Model (Power Pivot). DAX columns and measures live in the model, so the Data sheet doesn't change (D16).
-- **Pivot tables:** one per question: products by carb band, share of sugar in each band, carbs by package promise, and the 15 most scanned products sold only in Spain.
-- **tblLabels:** the three promises (Sugar free, Whole grain, Gluten free). It gives one row per promise to the promise pivot table.
+- **Data Model:** *tblProducts*, *tblLabels*, *tblPrivateLabels* and *tblCountries* are loaded into the Data Model (Power Pivot). DAX columns and measures live in the model, so the Data sheet doesn't change (D16).
+- **Pivot tables:** one per question: products by carb band, share of sugar by band, carbs by package promise, 15 most scanned products sold only in Spain, products by brand type, and share of products also sold in other countries.
+- **tblLabels:** the three package promises. It gives one row per promise to its pivot table.
+- **tblPrivateLabels:** the 51 supermarket brands, in lowercase and without accents (D17).
+- **tblCountries:** ten European countries and their tag in *countries_tags* (for example, "en:france").
+- **Map data:** next to *tblCountries*, CUBEVALUE reads *Also sold in %* for each country from the Data Model. The filled map uses this range.
 
-Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16.
+Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16 to D18.

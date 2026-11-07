@@ -176,6 +176,7 @@ Calculated row by row in the model. They don't exist in the Data sheet.
 | *whole_grain* | Same with "integral", "whole grain", "wholegrain", "whole wheat" | |
 | *gluten_free* | Same with "sin gluten", "gluten free", "glutenfree" | |
 | *name_and_brand* | `= [product_name] & IF(ISBLANK([brands_en]), "", " · " & [brands_en])` | Name and brand, so products with the same name and different brand don't merge |
+| *brand_type* | `= VAR b = [search_brand] VAR matches = COUNTROWS(FILTER(tblPrivateLabels, b = tblPrivateLabels[brand] \|\| LEFT(b, LEN(tblPrivateLabels[brand]) + 1) = tblPrivateLabels[brand] & " ")) RETURN IF(b = "", "Unknown brand", IF(matches > 0, "Private labels", "Other brands"))` | "Private labels" if the brand is in *tblPrivateLabels* or starts with one of its brands and a space (D17) |
 
 ### Measures
 
@@ -183,19 +184,30 @@ All of them count only products with *nutrition_check* = "OK".
 
 ```
 Products := CALCULATE(COUNTROWS(tblProducts), tblProducts[nutrition_check] = "OK")
-Products % := DIVIDE([Products], CALCULATE([Products], ALL(tblProducts[carb_band])))
+Products % := DIVIDE([Products], CALCULATE([Products], ALLSELECTED(tblProducts)))
 Sugar % := VAR s = CALCULATE(SUM(tblProducts[sugars_100g]), tblProducts[nutrition_check] = "OK", NOT ISBLANK(tblProducts[sugars_100g])) VAR c = CALCULATE(SUM(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK", NOT ISBLANK(tblProducts[sugars_100g])) RETURN DIVIDE(s, c)
 Other carbs % := IF(ISBLANK([Sugar %]), BLANK(), 1 - [Sugar %])
 Avg carbs := CALCULATE(AVERAGE(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK")
 Avg sugars := CALCULATE(AVERAGE(tblProducts[sugars_100g]), tblProducts[nutrition_check] = "OK")
-Carbs with claim := VAR c = IF(HASONEVALUE(tblLabels[Label says]), VALUES(tblLabels[Label says])) RETURN CALCULATE([Avg carbs], FILTER(tblProducts, SWITCH(c, "Sugar free", tblProducts[sugar_free], "Whole grain", tblProducts[whole_grain], "Gluten free", tblProducts[gluten_free]) = "Yes"))
-Carbs without claim := (same, with "No")
+Carbs with label := VAR c = IF(HASONEVALUE(tblLabels[Label says]), VALUES(tblLabels[Label says])) RETURN CALCULATE([Avg carbs], FILTER(tblProducts, SWITCH(c, "Sugar free", tblProducts[sugar_free], "Whole grain", tblProducts[whole_grain], "Gluten free", tblProducts[gluten_free]) = "Yes"))
+Carbs without label := (same, with "No")
 Scans ES := CALCULATE(SUM(tblProducts[unique_scans_n]), tblProducts[nutrition_check] = "OK", tblProducts[countries_tags] = "en:spain")
 Portions per 100 g := CALCULATE(AVERAGE(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK") / 10
+Also sold in := VAR t = IF(HASONEVALUE(tblCountries[tag]), VALUES(tblCountries[tag])) RETURN CALCULATE([Products], FILTER(tblProducts, SEARCH(t, tblProducts[countries_tags], 1, 0) > 0))
+Also sold in % := DIVIDE([Also sold in], [Products])
 ```
 
 - **CALCULATE:** runs a calculation with extra filters. Here, always "OK".
-- **Products %:** ALL removes the band filter, so the bottom of the division is the total of all bands.
+- **Products %:** ALLSELECTED removes the filter of the row (band, brand type…) but keeps the slicers, so it works in any pivot table.
 - **Sugar %:** sugar and carbs of the group, only products with sugar data.
-- **Carbs with / without claim:** HASONEVALUE and VALUES read the promise of the row; SWITCH picks its column; FILTER keeps the products with "Yes" (or "No").
+- **Carbs with / without label:** HASONEVALUE and VALUES read the promise of the row; SWITCH picks its column; FILTER keeps the products with "Yes" (or "No").
 - **Scans ES:** scans of products sold only in Spain.
+- **Also sold in:** reads the tag of the row and counts the products whose *countries_tags* contains it. *tblCountries* has no relationship with *tblProducts*, so *Products* stays the total and *Also sold in %* is the share of all products.
+
+### Map data (cells next to tblCountries)
+
+```
+=CUBEVALUE("ThisWorkbookDataModel", "[Measures].[Also sold in %]", "[tblCountries].[Country].&[" & [country cell] & "]")
+```
+
+CUBEVALUE asks the Data Model for a measure with a filter: here, *Also sold in %* for one country. Filled maps can't use pivot tables, so they read these cells.

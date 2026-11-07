@@ -400,3 +400,50 @@ Build the dashboard on the Excel Data Model (Power Pivot) with DAX.
 - ***Pivot grouping and calculated fields:*** the calculated field returns 0 on a grouped field.
 - ***Formulas next to the pivot tables:*** slicers don't filter them.
 - ***Slicer for nutrition_check:*** data that doesn't add up is not useful for the user.
+
+## D17 - Supermarket brands
+<sub>7 November 2026</sub>
+
+### Context
+
+The export has no column that says if a brand belongs to a supermarket chain. Only *brands_en* exists, and it is empty in 35% of products.
+
+### Decision
+
+Classify each product in three groups with a list of supermarket brands (*tblPrivateLabels*, 51 brands).
+
+- ***Private labels:*** the brand is in the list, or starts with a brand of the list followed by a space ("carrefour bio").
+- ***Other brands:*** the product has a brand that is not in the list.
+- ***Unknown brand:*** *brands_en* is empty.
+
+### Rules
+
+- The list has the own brands of the main Spanish chains, checked against the 100 most frequent brands of the "Other brands" group. Some small own brands may still be counted as "Other brands".
+- The list is a table in the workbook, so a brand can be added without changing any formula.
+
+### Discarded
+
+- ***"Manufacturer brand" and "No brand":*** they state things the data doesn't prove. "Other brands" only means "not in the list", and an empty brand is unknown, not missing.
+
+
+## D18 - Dashboard content
+<sub>7 November 2026</sub>
+
+### Decision
+
+Six visuals in two blocks, each one a different chart type, and a panel of slicers.
+
+- ***For a person with diabetes:*** products by carb band (columns), share of sugar in each band (100% stacked columns), carbs by package promise (bars), and the 15 most scanned products sold only in Spain (table with data bars).
+- ***Spanish market:*** share of supermarket brands (doughnut) and share of products also sold in other European countries (filled map).
+- ***Slicers:*** carb band, brand type and package promise (sugar free, whole grain, gluten free).
+
+### Rules
+
+- The map can't be a pivot chart. Its values come from the Data Model with CUBEVALUE.
+
+### Discarded
+
+- ***Food groups:*** *main_category_en* and *pnns_groups* are empty in more than half of the products.
+- ***Nutri-Score slicer:*** only 41% of products have a grade, including "not-applicable".
+- ***Energy split (carbs, fat, protein):*** replaced by the map, which says more about the market.
+- ***All bar or column charts:*** a different chart for each question makes the dashboard easier to read.
