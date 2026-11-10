@@ -177,6 +177,7 @@ Calculated row by row in the model. They don't exist in the Data sheet.
 | *gluten_free* | Same with "sin gluten", "gluten free", "glutenfree" | |
 | *name_and_brand* | `= [product_name] & IF(ISBLANK([brands_en]), "", " · " & [brands_en])` | Name and brand, so products with the same name and different brand don't merge |
 | *brand_type* | `= VAR b = [search_brand] VAR matches = COUNTROWS(FILTER(tblPrivateLabels, b = tblPrivateLabels[brand] \|\| LEFT(b, LEN(tblPrivateLabels[brand]) + 1) = tblPrivateLabels[brand] & " ")) RETURN IF(b = "", "Unknown brand", IF(matches > 0, "Private labels", "Other brands"))` | "Private labels" if the brand is in *tblPrivateLabels* or starts with one of its brands and a space (D17) |
+| *main_brand* | `= VAR b = [search_brand] VAR p = SEARCH(",", b, 1, 0) RETURN IF(p = 0, b, TRIM(LEFT(b, p - 1)))` | First brand of the product: the text before the first comma, or the whole text if there is no comma (D19) |
 
 ### Measures
 
@@ -186,7 +187,6 @@ All of them count only products with *nutrition_check* = "OK".
 Products := CALCULATE(COUNTROWS(tblProducts), tblProducts[nutrition_check] = "OK")
 Products % := DIVIDE([Products], CALCULATE([Products], ALLSELECTED(tblProducts)))
 Sugar % := VAR s = CALCULATE(SUM(tblProducts[sugars_100g]), tblProducts[nutrition_check] = "OK", NOT ISBLANK(tblProducts[sugars_100g])) VAR c = CALCULATE(SUM(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK", NOT ISBLANK(tblProducts[sugars_100g])) RETURN DIVIDE(s, c)
-Other carbs % := IF(ISBLANK([Sugar %]), BLANK(), 1 - [Sugar %])
 Avg carbs := CALCULATE(AVERAGE(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK")
 Avg sugars := CALCULATE(AVERAGE(tblProducts[sugars_100g]), tblProducts[nutrition_check] = "OK")
 Carbs with label := VAR c = IF(HASONEVALUE(tblLabels[Label says]), VALUES(tblLabels[Label says])) RETURN CALCULATE([Avg carbs], FILTER(tblProducts, SWITCH(c, "Sugar free", tblProducts[sugar_free], "Whole grain", tblProducts[whole_grain], "Gluten free", tblProducts[gluten_free]) = "Yes"))
@@ -195,6 +195,10 @@ Scans ES := CALCULATE(SUM(tblProducts[unique_scans_n]), tblProducts[nutrition_ch
 Portions per 100 g := CALCULATE(AVERAGE(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK") / 10
 Also sold in := VAR t = IF(HASONEVALUE(tblCountries[tag]), VALUES(tblCountries[tag])) RETURN CALCULATE([Products], FILTER(tblProducts, SEARCH(t, tblProducts[countries_tags], 1, 0) > 0))
 Also sold in % := DIVIDE([Also sold in], [Products])
+Median carbs := CALCULATE(MEDIAN(tblProducts[carbohydrates_100g]), tblProducts[nutrition_check] = "OK")
+Carb-free % := DIVIDE(CALCULATE([Products], tblProducts[carbohydrates_100g] <= 0.5), [Products])
+Sugar-free % := DIVIDE(CALCULATE([Products], tblProducts[sugars_100g] <= 0.5, NOT ISBLANK(tblProducts[sugars_100g])), CALCULATE([Products], NOT ISBLANK(tblProducts[sugars_100g])))
+Brands := CALCULATE(DISTINCTCOUNT(tblProducts[main_brand]), tblProducts[nutrition_check] = "OK", tblProducts[main_brand] <> "")
 ```
 
 - **CALCULATE:** runs a calculation with extra filters. Here, always "OK".
@@ -203,6 +207,8 @@ Also sold in % := DIVIDE([Also sold in], [Products])
 - **Carbs with / without label:** HASONEVALUE and VALUES read the promise of the row; SWITCH picks its column; FILTER keeps the products with "Yes" (or "No").
 - **Scans ES:** scans of products sold only in Spain.
 - **Also sold in:** reads the tag of the row and counts the products whose *countries_tags* contains it. *tblCountries* has no relationship with *tblProducts*, so *Products* stays the total and *Also sold in %* is the share of all products.
+- **Carb-free % / Sugar-free %:** products with 0.5 g or less per 100 g, divided by all products. For sugar, only products with sugar data count, above and below the line.
+- **Brands:** DISTINCTCOUNT counts each brand once. `<> ""` leaves out products without a brand, which would count as one empty brand.
 
 ### Map data (cells next to tblCountries)
 
@@ -211,3 +217,40 @@ Also sold in % := DIVIDE([Also sold in], [Products])
 ```
 
 CUBEVALUE asks the Data Model for a measure with a filter: here, *Also sold in %* for one country. Filled maps can't use pivot tables, so they read these cells.
+
+### Key numbers (AnalysisData, cells B143 to B155)
+
+```
+=TEXT(CUBEVALUE("ThisWorkbookDataModel", "[Measures].[Products]"), "#,##0")
+```
+
+One cell per card, all with the same pattern: CUBEVALUE reads the measure from the Data Model and TEXT gives it its format. Without TEXT, CUBEVALUE overwrites the format of the cell (D19).
+
+| Cell | Card | Measure | Format |
+|---|---|---|---|
+| B143 | Products | Products | `"#,##0"` |
+| B146 | Median carbs | Median carbs | `"0.0"` & " g" |
+| B149 | Carb-free products | Carb-free % | `"0.0%"` |
+| B152 | Sugar-free products | Sugar-free % | `"0.0%"` |
+| B155 | Brands | Brands | `"#,##0"` |
+
+The title of each card is in the cell above.
+
+### Band chart data (AnalysisData, E2:F12 and E17:F27)
+
+Products by band (F3, copied down to F12):
+
+```
+=CUBEVALUE("ThisWorkbookDataModel", "[Measures].[Products]", "[tblProducts].[carb_band].&[" & E3 & "]") / CUBEVALUE("ThisWorkbookDataModel", "[Measures].[Products]")
+```
+
+Products of the band divided by all products. Calculated in the cell because *Products %* uses ALLSELECTED, which only works well inside a pivot table.
+
+Share of sugar by band (F18, copied down to F27):
+
+```
+=CUBEVALUE("ThisWorkbookDataModel", "[Measures].[Sugar %]", "[tblProducts].[carb_band].&[" & E18 & "]")
+```
+
+- The bands in E3:E12 are typed as text ('0-10). E18:E27 point to them (`=E3`).
+- No TEXT: the charts need numbers (D20).

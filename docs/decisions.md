@@ -433,7 +433,7 @@ Classify each product in three groups with a list of supermarket brands (*tblPri
 
 Six visuals in two blocks, each one a different chart type, and a panel of slicers.
 
-- ***For a person with diabetes:*** products by carb band (columns), share of sugar in each band (100% stacked columns), carbs by package promise (bars), and the 15 most scanned products sold only in Spain (table with data bars).
+- ***For a person with diabetes:*** products by carb band (columns), share of sugar in each band (lollipop, D20), carbs by package promise (bars), and the 15 most scanned products sold only in Spain (table with data bars).
 - ***Spanish market:*** share of supermarket brands (doughnut) and share of products also sold in other European countries (filled map).
 - ***Slicers:*** carb band, brand type and package promise (sugar free, whole grain, gluten free).
 
@@ -447,3 +447,64 @@ Six visuals in two blocks, each one a different chart type, and a panel of slice
 - ***Nutri-Score slicer:*** only 41% of products have a grade, including "not-applicable".
 - ***Energy split (carbs, fat, protein):*** replaced by the map, which says more about the market.
 - ***All bar or column charts:*** a different chart for each question makes the dashboard easier to read.
+
+
+## D19 - Key numbers
+<sub>9 November 2026</sub>
+
+### Context
+
+The dashboard starts with a row of cards with the numbers that describe the data before any chart.
+
+### Decision
+
+Five cards, all with validated products only (*nutrition_check* = "OK").
+
+- ***Products:*** 235,834.
+- ***Median carbs:*** 10.5 g per 100 g.
+- ***Carb-free products:*** share of products with 0.5 g of carbs or less per 100 g.
+- ***Sugar-free products:*** share of products with 0.5 g of sugar or less per 100 g, out of the products with sugar data.
+- ***Brands:*** 20,280 different brands, counting only the first brand of each product (*main_brand*).
+
+### Rules
+
+- The cards count the same products as the charts, so the numbers add up.
+- 0.5 g is the limit of the EU rule for "sugar free" claims (Regulation (EC) No 1924/2006). The same limit is used for carbs.
+- Median, not average: a few products with almost 100 g (sugar, flour) pull the average up to 24.2 g. The median is the product in the middle.
+- *main_brand* takes the text before the first comma of *search_brand*: "hacendado, mercadona" counts as "hacendado". The number is approximate, because the same brand can be written in different ways.
+- The values come from the Data Model with CUBEVALUE and TEXT, because CUBEVALUE overwrites the number format of the cell.
+
+### Discarded
+
+- ***All products (246,846):*** it doesn't match the charts. The products left out are analysed in the Quality sheet.
+- ***Validated data:*** the same number as Products once Products counts only validated products.
+- ***Share of consistent data:*** it says little to a person looking for food.
+
+
+## D20 - Charts from cells
+<sub>10 November 2026</sub>
+
+### Context
+
+Pivot charts only offer the basic chart types, show field buttons and can lose colours and labels on refresh. The band charts need things they don't allow: one bar in a different colour and a lollipop chart.
+
+### Decision
+
+The two band charts are normal charts that read cells next to their pivot table. The cells get each value from the Data Model with CUBEVALUE.
+
+- ***Products by carb band:*** columns close together, like a histogram, with the 0-10 band in the accent colour.
+- ***Share of sugar by band:*** lollipop, a line chart with markers and no line, and error bars from each point down to 0.
+
+### Rules
+
+- Each cell asks for its band by name, so a slicer that hides a band doesn't move the other rows.
+- The bands are typed as text ('10-20). Without the apostrophe Excel turns them into dates.
+- The share of products is calculated in the cell (band / total). The *Products %* measure uses ALLSELECTED, which only works well inside a pivot table.
+- No TEXT here: charts need numbers. The format goes in the chart labels.
+
+### Discarded
+
+- ***Excel Histogram chart:*** it needs the raw values and makes its own ranges. With the bands it counted how many bands fall in each range of sugar.
+- ***Funnel:*** the bands are not steps, and the share goes up again between 30 and 60 g.
+- ***Area:*** the same reading as columns.
+- ***100% stacked columns:*** 20 blocks of colour to show one number per band.

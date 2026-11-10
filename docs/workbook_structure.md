@@ -80,5 +80,7 @@ Helper sheet with the pivot tables and charts that feed the dashboard. The user 
 - **tblPrivateLabels:** the 51 supermarket brands, in lowercase and without accents (D17).
 - **tblCountries:** ten European countries and their tag in *countries_tags* (for example, "en:france").
 - **Map data:** next to *tblCountries*, CUBEVALUE reads *Also sold in %* for each country from the Data Model. The filled map uses this range.
+- **Band chart data:** next to the two band pivot tables (E2:F12 and E17:F27), the share of products and the share of sugar for each band, read with CUBEVALUE. The two band charts use these ranges (D20).
+- **Key numbers (B142:B155):** title and value of the five cards of the dashboard: products, median carbs, carb-free products, sugar-free products and brands (D19).
 
-Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16 to D18.
+Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16 to D20.
