@@ -508,3 +508,33 @@ The two band charts are normal charts that read cells next to their pivot table.
 - ***Funnel:*** the bands are not steps, and the share goes up again between 30 and 60 g.
 - ***Area:*** the same reading as columns.
 - ***100% stacked columns:*** 20 blocks of colour to show one number per band.
+
+
+## D21 - Dashboard layout
+<sub>11 November 2026</sub>
+
+### Context
+
+The dashboard has twelve blocks: five key numbers, six visuals and the slicers. It has to look the same on any screen and read well in one screenshot.
+
+### Decision
+
+One screen, with all the blocks on a grid of equal boxes.
+
+- ***Grid:*** columns A to AF with the same width. The content goes from B to AE, with A and AF as margins. A key number card is the unit: the big visuals are two or three cards wide, with the same gap between all the boxes.
+- ***One screen:*** the dashboard ends at row 45. When the sheet is opened, a macro fits columns A to AF to the width of the window.
+- ***Slicers at the bottom:*** the dashboard shows the whole market by default. The user filters only if they want to.
+- ***Titles outside the charts:*** each chart sits on a box without title or background. The title is a text box in the box, so all titles are at the same height and with the same font.
+- ***Map:*** no chart title and the legend named "Products (%)". France stands out because it really sells four times more Spanish products than the next country.
+
+### Rules
+
+- Fonts that come with Excel (Aptos, Arial), so the dashboard looks the same on other computers.
+- New chart types (map, funnel, histogram) don't allow moving or resizing their title. One more reason to keep titles outside.
+
+### Discarded
+
+- ***A page of 70 rows:*** the dashboard was almost square and the screen is wide. To see it whole the zoom had to go down to 50%, with half of the screen empty.
+- ***Slicers at the top:*** they took the first place of the screen for something the user may never use.
+- ***Capping the colour scale of the map at 2%:*** the legend would say that the highest value is 2%, when it is 6.4%.
+- ***Open Sans:*** it is not installed on Windows. Other computers would show another font.

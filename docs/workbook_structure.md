@@ -70,6 +70,21 @@ Adds up the carbs and portions of a meal from the barcode and the amount of each
 Formulas: *docs/workbook_formulas.md*. Decisions: D14.
 
 
+## Analysis
+
+Dashboard of the Spanish market for a person with type 1 diabetes. It fits in one screen.
+
+- **Title (rows 1 to 5):** orange band across the whole sheet.
+- **Grid:** columns A to AF, all with the same width. The content goes from B to AE, so A and AF are the side margins. The columns after AF are hidden.
+- **Top row:** five key number cards and the map.
+- **Middle and bottom:** products by carb band and share of sugar on the left, package promises in the middle, brand types and the 15 most scanned products on the right.
+- **Slicers:** in a strip at the bottom. The dashboard shows the whole market by default.
+- **Boxes:** each visual sits on its own white box. The charts have no title or background; the title is a text box inside the box.
+- **Zoom:** when the sheet is opened, the zoom fits columns A to AF to the width of the window. Code in *vba/Analysis.cls*.
+
+Decisions: D18 to D21.
+
+
 ## AnalysisData
 
 Helper sheet with the pivot tables and charts that feed the dashboard. The user doesn't work on it.
