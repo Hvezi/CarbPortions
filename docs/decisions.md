@@ -493,12 +493,14 @@ Pivot charts only offer the basic chart types, show field buttons and can lose c
 The two band charts are normal charts that read cells next to their pivot table. The cells get each value from the Data Model with CUBEVALUE.
 
 - ***Products by carb band:*** columns close together, like a histogram, with the 0-10 band in the accent colour.
-- ***Share of sugar by band:*** lollipop, a line chart with markers and no line, and error bars from each point down to 0.
+- ***Share of sugar by band:*** lollipop, a line chart with markers and no line, and error bars from each point down to 0. The colour of each point goes from beige to red with its value.
 
 ### Rules
 
 - Each cell asks for its band by name, so a slicer that hides a band doesn't move the other rows.
-- The bands are typed as text ('10-20). Without the apostrophe Excel turns them into dates.
+- The bands are typed as text ('10-20 g). Without the apostrophe Excel turns them into dates.
+- The band names end in " g" in the model (*carb_band*), so the axis and the slicer read "0-10 g" without explaining what a band is.
+- Colours by value: one series per range (50% or more, 40-50%, 30-40%, less than 30%), with #N/A for the bands out of the range. When a slicer changes the values, each point takes the colour of its new range. Painted by hand, the colours would stay where they were.
 - The share of products is calculated in the cell (band / total). The *Products %* measure uses ALLSELECTED, which only works well inside a pivot table.
 - No TEXT here: charts need numbers. The format goes in the chart labels.
 
@@ -523,13 +525,15 @@ One screen, with all the blocks on a grid of equal boxes.
 
 - ***Grid:*** columns A to AF with the same width. The content goes from B to AE, with A and AF as margins. A key number card is the unit: the big visuals are two or three cards wide, with the same gap between all the boxes.
 - ***One screen:*** the dashboard ends at row 45. When the sheet is opened, a macro fits columns A to AF to the width of the window.
+- ***Key number cards:*** title, number and, when needed, a subtitle with the unit or the limit. All the cards have the same position for each part.
 - ***Slicers at the bottom:*** the dashboard shows the whole market by default. The user filters only if they want to.
-- ***Titles outside the charts:*** each chart sits on a box without title or background. The title is a text box in the box, so all titles are at the same height and with the same font.
+- ***Titles outside the charts:*** each chart sits on a box without title or background. The title is a text box in the box, so all titles are at the same height and with the same font. The charts have no subtitle.
 - ***Map:*** no chart title and the legend named "Products (%)". France stands out because it really sells four times more Spanish products than the next country.
 
 ### Rules
 
 - Fonts that come with Excel (Aptos, Arial), so the dashboard looks the same on other computers.
+- The number of each card is a text box linked to its cell in AnalysisData, so it changes with the data.
 - New chart types (map, funnel, histogram) don't allow moving or resizing their title. One more reason to keep titles outside.
 
 ### Discarded

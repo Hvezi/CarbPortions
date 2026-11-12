@@ -76,10 +76,10 @@ Dashboard of the Spanish market for a person with type 1 diabetes. It fits in on
 
 - **Title (rows 1 to 5):** orange band across the whole sheet.
 - **Grid:** columns A to AF, all with the same width. The content goes from B to AE, so A and AF are the side margins. The columns after AF are hidden.
-- **Top row:** five key number cards and the map.
-- **Middle and bottom:** products by carb band and share of sugar on the left, package promises in the middle, brand types and the 15 most scanned products on the right.
+- **Key numbers:** five cards in the top row: products, median carbs, carb-free products, sugar-free products and brands. The number is a text box linked to its cell in AnalysisData (B143 to B155).
+- **Charts:** the map next to the cards; products by carb band and share of sugar on the left; package promises in the middle; brand types and the 15 most scanned products on the right.
 - **Slicers:** in a strip at the bottom. The dashboard shows the whole market by default.
-- **Boxes:** each visual sits on its own white box. The charts have no title or background; the title is a text box inside the box.
+- **Boxes:** each card and chart sits on its own white box. The charts have no title or background; the title is a text box inside the box.
 - **Zoom:** when the sheet is opened, the zoom fits columns A to AF to the width of the window. Code in *vba/Analysis.cls*.
 
 Decisions: D18 to D21.
@@ -97,5 +97,6 @@ Helper sheet with the pivot tables and charts that feed the dashboard. The user 
 - **Map data:** next to *tblCountries*, CUBEVALUE reads *Also sold in %* for each country from the Data Model. The filled map uses this range.
 - **Band chart data:** next to the two band pivot tables (E2:F12 and E17:F27), the share of products and the share of sugar for each band, read with CUBEVALUE. The two band charts use these ranges (D20).
 - **Key numbers (B142:B155):** title and value of the five cards of the dashboard: products, median carbs, carb-free products, sugar-free products and brands (D19).
+- **Sugar chart colours (G17:J27):** the share of sugar of each band split in four ranges, one per colour of the chart (D20).
 
-Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16 to D20.
+Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16 to D21.

@@ -171,7 +171,7 @@ Calculated row by row in the model. They don't exist in the Data sheet.
 
 | Column | Formula | What it does |
 |---|---|---|
-| *carb_band* | `= VAR b = MIN(FLOOR([carbohydrates_100g], 10), 90) RETURN b & "-" & b + 10` | Band of 10 g. FLOOR rounds down, MIN puts 100 g in the last band |
+| *carb_band* | `= VAR b = MIN(FLOOR([carbohydrates_100g], 10), 90) RETURN b & "-" & b + 10 & " g"` | Band of 10 g ("0-10 g"). FLOOR rounds down, MIN puts 100 g in the last band |
 | *sugar_free* | `= IF(SEARCH("sin azucar", [search_name], 1, 0) + SEARCH("sugar free", [search_name], 1, 0) + SEARCH("0% azucar", [search_name], 1, 0) + SEARCH("zero", [search_name], 1, 0) > 0, "Yes", "No")` | "Yes" if the name has any of the words. SEARCH returns 0 when it doesn't find the text |
 | *whole_grain* | Same with "integral", "whole grain", "wholegrain", "whole wheat" | |
 | *gluten_free* | Same with "sin gluten", "gluten free", "glutenfree" | |
@@ -252,5 +252,19 @@ Share of sugar by band (F18, copied down to F27):
 =CUBEVALUE("ThisWorkbookDataModel", "[Measures].[Sugar %]", "[tblProducts].[carb_band].&[" & E18 & "]")
 ```
 
-- The bands in E3:E12 are typed as text ('0-10). E18:E27 point to them (`=E3`).
+- The bands in E3:E12 are typed as text ('0-10 g), with the same name as in *carb_band*. E18:E27 point to them (`=E3`).
 - No TEXT: the charts need numbers (D20).
+
+### Sugar chart colours (AnalysisData, G17:J27)
+
+One column per range of values. Each one copies the share of sugar of the band if it is in its range, and #N/A if not:
+
+| Column | Range | Formula (row 18) |
+|---|---|---|
+| G | 50% or more | `=IF(F18 >= 0.5, F18, NA())` |
+| H | 40% to 50% | `=IF(AND(F18 >= 0.4, F18 < 0.5), F18, NA())` |
+| I | 30% to 40% | `=IF(AND(F18 >= 0.3, F18 < 0.4), F18, NA())` |
+| J | Less than 30% | `=IF(F18 < 0.3, F18, NA())` |
+
+Each column is a series of the chart with its own colour. Charts don't draw #N/A, so each band shows only one point, in the colour of its range (D20).
+
