@@ -433,7 +433,7 @@ Classify each product in three groups with a list of supermarket brands (*tblPri
 
 Six visuals in two blocks, each one a different chart type, and a panel of slicers.
 
-- ***For a person with diabetes:*** products by carb band (columns), share of sugar in each band (lollipop, D20), carbs by package promise (bars), and the 15 most scanned products sold only in Spain (table with data bars).
+- ***For a person with diabetes:*** products by carb band (columns), share of sugar in each band (lollipop, D20), carbs by package promise (bars), and the 10 most scanned products sold only in Spain (table).
 - ***Spanish market:*** share of supermarket brands (doughnut) and share of products also sold in other European countries (filled map).
 - ***Slicers:*** carb band, brand type and package promise (sugar free, whole grain, gluten free).
 
@@ -498,8 +498,8 @@ The two band charts are normal charts that read cells next to their pivot table.
 ### Rules
 
 - Each cell asks for its band by name, so a slicer that hides a band doesn't move the other rows.
-- The bands are typed as text ('10-20 g). Without the apostrophe Excel turns them into dates.
-- The band names end in " g" in the model (*carb_band*), so the axis and the slicer read "0-10 g" without explaining what a band is.
+- The bands are typed as text ('10-20g). Without the apostrophe Excel turns them into dates.
+- The band names end in "g" in the model (*carb_band*), so the axis and the slicer read "0-10g" without explaining what a band is.
 - Colours by value: one series per range (50% or more, 40-50%, 30-40%, less than 30%), with #N/A for the bands out of the range. When a slicer changes the values, each point takes the colour of its new range. Painted by hand, the colours would stay where they were.
 - The share of products is calculated in the cell (band / total). The *Products %* measure uses ALLSELECTED, which only works well inside a pivot table.
 - No TEXT here: charts need numbers. The format goes in the chart labels.
@@ -532,7 +532,7 @@ One screen, with all the blocks on a grid of equal boxes.
 
 ### Rules
 
-- Fonts that come with Excel (Aptos, Arial), so the dashboard looks the same on other computers.
+- Aptos for text and Aptos Black for titles and key numbers. Both come with Microsoft 365, so the dashboard looks the same on other computers.
 - The number of each card is a text box linked to its cell in AnalysisData, so it changes with the data.
 - New chart types (map, funnel, histogram) don't allow moving or resizing their title. One more reason to keep titles outside.
 
@@ -542,3 +542,28 @@ One screen, with all the blocks on a grid of equal boxes.
 - ***Slicers at the top:*** they took the first place of the screen for something the user may never use.
 - ***Capping the colour scale of the map at 2%:*** the legend would say that the highest value is 2%, when it is 6.4%.
 - ***Open Sans:*** it is not installed on Windows. Other computers would show another font.
+
+
+## D22 - Slicers
+<sub>15 November 2026</sub>
+
+Five slicers at the bottom of the dashboard: carbs per 100 g, brand, and one for each package label (says sugar free, whole grain, gluten free). The labels have one slicer each because a product can say more than one thing ("integral sin azúcar").
+
+A slicer doesn't filter the chart that is already split by the same field. If the brand slicer filtered the doughnut, choosing Private labels would show one full ring at 100%. Instead, the doughnut keeps all the brands and greys out the ones that are not chosen, so the user sees how much the choice weighs in the market. The same goes for the two carb charts and the carb slicer, and for the labels chart and the label slicers.
+
+The key numbers and the map are not pivot tables, so the slicers reach them in a different way: each CUBEVALUE formula takes the slicers as extra arguments.
+
+The slicer titles say "Says sugar free" and not "Sugar free" because they filter by what the package says, not by the real sugar. The key number *Sugar-free* counts the real sugar. Only 46% of the products that say "sugar free" have 0.5 g or less: most of them mean "no added sugar".
+
+Discarded: a slicer for countries. *tblCountries* has no relationship with the products, and the map already shows that information.
+
+
+## D23 - Chart details
+<sub>20 November 2026</sub>
+
+- **Labels chart:** the axis ends a little after the top of the chosen carb range, and a dashed line marks that top ("30g"). Without it, a bar of 24 g looks almost full when the range is 20-30 g. The line is placed a little to the right of its real value so the bar labels don't touch it; the bar labels give the exact grams.
+- **Map:** 17 countries instead of 10. With 10, Madeira and the Azores pulled the map to the left and half of the box was empty. A card next to the map shows the country that shares the most products and how many, and it changes with the slicers. France is first in almost every case: Open Food Facts started in France and most products are added by French and Spanish users, so French products are over-represented.
+- **Most scanned list:** 10 products instead of 15, so the text can be read without zoom. It is a linked picture of the pivot table, because a pivot table can't sit on top of the boxes. The colours come from a pivot table style, because cell formats stay with each product and are lost when the slicers change the list.
+- **Titles:** text boxes outside the charts, all at the same distance from the top and left edge of their box.
+- **Grams without space** ("24g"), the same in every chart.
+

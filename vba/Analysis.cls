@@ -4,11 +4,16 @@
 ' See docs/decisions.md, D21
 
 Private Sub Worksheet_Activate()
+    Dim lastCol As Long
+
     ' Don't show the steps on screen
     Application.ScreenUpdating = False
 
-    ' Zoom so that columns A to AF fill the width of the window
-    Me.Range("A1:AF1").Select
+    ' Last column: where the slicer box ends, plus one column of margin
+    lastCol = Me.Shapes("Slicers").BottomRightCell.Column + 1
+
+    ' Zoom so that columns A to lastCol fill the width of the window
+    Me.Range(Me.Cells(1, 1), Me.Cells(1, lastCol)).Select
     ActiveWindow.Zoom = True
 
     ' Go to the top left corner

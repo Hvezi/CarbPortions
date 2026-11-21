@@ -171,7 +171,7 @@ Calculated row by row in the model. They don't exist in the Data sheet.
 
 | Column | Formula | What it does |
 |---|---|---|
-| *carb_band* | `= VAR b = MIN(FLOOR([carbohydrates_100g], 10), 90) RETURN b & "-" & b + 10 & " g"` | Band of 10 g ("0-10 g"). FLOOR rounds down, MIN puts 100 g in the last band |
+| *carb_band* | `= VAR b = MIN(FLOOR([carbohydrates_100g], 10), 90) RETURN b & "-" & b + 10 & "g"` | Band of 10 g ("0-10g"). FLOOR rounds down, MIN puts 100 g in the last band |
 | *sugar_free* | `= IF(SEARCH("sin azucar", [search_name], 1, 0) + SEARCH("sugar free", [search_name], 1, 0) + SEARCH("0% azucar", [search_name], 1, 0) + SEARCH("zero", [search_name], 1, 0) > 0, "Yes", "No")` | "Yes" if the name has any of the words. SEARCH returns 0 when it doesn't find the text |
 | *whole_grain* | Same with "integral", "whole grain", "wholegrain", "whole wheat" | |
 | *gluten_free* | Same with "sin gluten", "gluten free", "glutenfree" | |
@@ -218,6 +218,26 @@ Brands := CALCULATE(DISTINCTCOUNT(tblProducts[main_brand]), tblProducts[nutritio
 
 CUBEVALUE asks the Data Model for a measure with a filter: here, *Also sold in %* for one country. Filled maps can't use pivot tables, so they read these cells.
 
+### Slicers in CUBEVALUE
+
+Every CUBEVALUE formula of the dashboard also takes the slicers, so it changes when the user filters:
+
+```
+=CUBEVALUE("ThisWorkbookDataModel", Slicer_carb_band, Slicer_brand_type, Slicer_sugar_free, Slicer_whole_grain, Slicer_gluten_free, "[Measures].[Products]")
+```
+
+The carb chart cells leave out *Slicer_carb_band*, because those charts are already split by carb range (D22).
+
+### Map card (AnalysisData, B140:B142)
+
+| Cell | Formula | What it does |
+|---|---|---|
+| B140 | `=XLOOKUP(MAX(tblCountries[Also sold in %]), tblCountries[Also sold in %], tblCountries[Country])` | Country with the highest share |
+| B141 | `=TEXT(MAX(tblCountries[Also sold in %]), "0.00%")` | Its share |
+| B142 | `=TEXT(CUBEVALUE("ThisWorkbookDataModel", "[Measures].[Also sold in]", "[tblCountries].[Country].&[" & B140 & "]", Slicer_carb_band, Slicer_brand_type, Slicer_sugar_free, Slicer_whole_grain, Slicer_gluten_free), "#,##0") & " products"` | Its number of products |
+
+MAX and XLOOKUP, not SORTBY: when a country has no products for the current filter, CUBEVALUE returns an empty text, and SORTBY puts text before numbers.
+
 ### Key numbers (AnalysisData, cells B143 to B155)
 
 ```
@@ -229,7 +249,7 @@ One cell per card, all with the same pattern: CUBEVALUE reads the measure from t
 | Cell | Card | Measure | Format |
 |---|---|---|---|
 | B143 | Products | Products | `"#,##0"` |
-| B146 | Median carbs | Median carbs | `"0.0"` & " g" |
+| B146 | Median carbs | Median carbs | `"0.0"` & "g" |
 | B149 | Carb-free products | Carb-free % | `"0.0%"` |
 | B152 | Sugar-free products | Sugar-free % | `"0.0%"` |
 | B155 | Brands | Brands | `"#,##0"` |
@@ -252,7 +272,7 @@ Share of sugar by band (F18, copied down to F27):
 =CUBEVALUE("ThisWorkbookDataModel", "[Measures].[Sugar %]", "[tblProducts].[carb_band].&[" & E18 & "]")
 ```
 
-- The bands in E3:E12 are typed as text ('0-10 g), with the same name as in *carb_band*. E18:E27 point to them (`=E3`).
+- The bands in E3:E12 are typed as text ('0-10g), with the same name as in *carb_band*. E18:E27 point to them (`=E3`).
 - No TEXT: the charts need numbers (D20).
 
 ### Sugar chart colours (AnalysisData, G17:J27)

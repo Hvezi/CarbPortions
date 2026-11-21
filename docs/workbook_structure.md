@@ -77,12 +77,15 @@ Dashboard of the Spanish market for a person with type 1 diabetes. It fits in on
 - **Title (rows 1 to 5):** orange band across the whole sheet.
 - **Grid:** columns A to AF, all with the same width. The content goes from B to AE, so A and AF are the side margins. The columns after AF are hidden.
 - **Key numbers:** five cards in the top row: products, median carbs, carb-free products, sugar-free products and brands. The number is a text box linked to its cell in AnalysisData (B143 to B155).
-- **Charts:** the map next to the cards; products by carb band and share of sugar on the left; package promises in the middle; brand types and the 15 most scanned products on the right.
-- **Slicers:** in a strip at the bottom. The dashboard shows the whole market by default.
+- **Charts:** the map next to the cards; products by carb band and share of sugar on the left; package promises in the middle; brand types and the 10 most scanned products on the right.
+- **Map card:** next to the map, the country that shares the most products with Spain, its share and its number of products (AnalysisData, B140:B142).
+- **Slicers:** in a strip at the bottom: carbs per 100 g, brand, says sugar free, says whole grain and says gluten free. The dashboard shows the whole market by default. A slicer doesn't filter the chart split by its own field (D22).
 - **Boxes:** each card and chart sits on its own white box. The charts have no title or background; the title is a text box inside the box.
-- **Zoom:** when the sheet is opened, the zoom fits columns A to AF to the width of the window. Code in *vba/Analysis.cls*.
+- **Most scanned list:** linked picture of the top 10 pivot table in AnalysisData, so it changes with the slicers.
+- **Zoom:** when the sheet is opened, the zoom fits the dashboard to the width of the window. Code in *vba/Analysis.cls*.
+- **Slicer events:** when a slicer changes, the labels chart moves its top line to the chosen carb range and the doughnut greys out the brands not chosen. Code in *vba/AnalysisData.cls*.
 
-Decisions: D18 to D21.
+Decisions: D18 to D23.
 
 
 ## AnalysisData
@@ -90,13 +93,14 @@ Decisions: D18 to D21.
 Helper sheet with the pivot tables and charts that feed the dashboard. The user doesn't work on it.
 
 - **Data Model:** *tblProducts*, *tblLabels*, *tblPrivateLabels* and *tblCountries* are loaded into the Data Model (Power Pivot). DAX columns and measures live in the model, so the Data sheet doesn't change (D16).
-- **Pivot tables:** one per question: products by carb band, share of sugar by band, carbs by package promise, 15 most scanned products sold only in Spain, products by brand type, and share of products also sold in other countries.
+- **Pivot tables:** one per question: products by carb band, share of sugar by band, carbs by package promise, 10 most scanned products sold only in Spain, products by brand type, and share of products also sold in other countries.
 - **tblLabels:** the three package promises. It gives one row per promise to its pivot table.
 - **tblPrivateLabels:** the 51 supermarket brands, in lowercase and without accents (D17).
-- **tblCountries:** ten European countries and their tag in *countries_tags* (for example, "en:france").
+- **tblCountries:** 17 European countries and their tag in *countries_tags* (for example, "en:france"). After adding a country, Power Pivot > Linked Table > Update All, or the model doesn't know it.
 - **Map data:** next to *tblCountries*, CUBEVALUE reads *Also sold in %* for each country from the Data Model. The filled map uses this range.
 - **Band chart data:** next to the two band pivot tables (E2:F12 and E17:F27), the share of products and the share of sugar for each band, read with CUBEVALUE. The two band charts use these ranges (D20).
 - **Key numbers (B142:B155):** title and value of the five cards of the dashboard: products, median carbs, carb-free products, sugar-free products and brands (D19).
+- **Map card (B140:B142):** country with the highest share, its share and its number of products.
 - **Sugar chart colours (G17:J27):** the share of sugar of each band split in four ranges, one per colour of the chart (D20).
 
-Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16 to D21.
+Formulas: *docs/workbook_formulas.md*, Data model. Decisions: D16 to D23.
