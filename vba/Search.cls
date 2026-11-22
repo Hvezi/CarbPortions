@@ -1,5 +1,6 @@
 ' Search (sheet module)
-' Sets the results back to page 1 when the user changes the search or the page size.
+' 1. Sets the results back to page 1 when the user changes the search or the page size.
+' 2. Sets the zoom to 80% when the sheet is opened.
 ' Input:  SearchTerm, ResultLimit (named cells in the Search sheet)
 ' Output: PageNumber = 1
 ' See docs/decisions.md, D9
@@ -16,4 +17,12 @@ Private Sub Worksheet_Change(ByVal Target As Range)
 
     ' Turn events back on
     Application.EnableEvents = True
+End Sub
+
+Private Sub Worksheet_Activate()
+    ' Same view every time: 80%, top left, cursor in the search box
+    ActiveWindow.Zoom = 80
+    ActiveWindow.ScrollRow = 1
+    ActiveWindow.ScrollColumn = 1
+    Me.Range("SearchTerm").Select
 End Sub

@@ -1,25 +1,9 @@
 # Workbook
 
 
-## Settings
+## Order of the sheets
 
-Information about the data source and the path to the data file.
-
-- **Source (cell B3):** link to the Open Food Facts download page.
-- **License (cell B4):** link to the Open Database License (ODbL). The data can be used and shared if the source is credited.
-- **DownloadDate (cell B5):** date when the export was downloaded (21 October 2026). Typed by hand when the file is replaced.
-- **Products (cell B6):** number of products in *tblProducts*, counted with ROWS, so it updates on refresh.
-- **How to refresh (cell B7):** replace the file in *data/raw* and use Data > Refresh All.
-- **FilePath (cell B8):** path of the Open Food Facts file, calculated with a formula from the folder where the workbook is saved. It works on any computer as long as the file is in *data/raw/*.
-
-
-## Data
-
-Clean product table, loaded by the Power Query query *qSource* (code in *powerquery/qSource.pq*).
-
-- **Table name:** tblProducts.
-- **Size:** 246,846 products and 32 columns. The last two, *search_name* and *search_brand*, are only used by the search sheet (D12).
-- **Refresh:** Data > Refresh All reads the whole file again and takes a few minutes.
+Search, Calculator, Analysis and Quality, with orange tabs, are for the user. Settings and Data, with grey tabs, are technical. AnalysisData is hidden (right click on a tab > Unhide). All the sheets share the palette, the fonts and the title band (D25).
 
 
 ## Search
@@ -28,9 +12,9 @@ Finds products by name, brand or barcode and shows them in pages, with photo, nu
 
 ### Inputs
 
-- **SearchTerm (cell C3):** product name, brand or barcode typed by the user. Formatted as text, so barcodes keep their leading zeros.
-- **ResultLimit (cell E3):** products per page. Dropdown (data validation) with 20, 50 or 100.
-- **PageNumber (cell I3):** page asked by the user. Changed with the spin button next to it (minimum 1, maximum 999).
+- **SearchTerm (cell C7, merged with D7):** product name, brand or barcode typed by the user. Formatted as text, so barcodes keep their leading zeros.
+- **ResultLimit (cell G7):** products per page. Dropdown (data validation) with 20, 50 or 100.
+- **PageNumber (cell I7):** page asked by the user. Changed with the ‹ and › buttons next to it (macros *PrevPage* and *NextPage*, *vba/modSearch.bas*).
 
 ### Named formulas
 
@@ -38,36 +22,37 @@ Calculations stored in the Name Manager, not in cells. Several cells use them, s
 
 - **SearchKey:** *SearchTerm* in lowercase and without accents, to compare it with *search_name* and *search_brand*.
 - **SearchHits:** list with one value per product of *tblProducts*: 1 if it matches the search, 0 if not.
-- **SearchTotal:** number of matching products. It points to cell P3 (`=SUM(SIGN(SearchHits))`), so it is calculated once and every formula reads the stored value (D15).
+- **SearchTotal:** number of matching products. It points to cell P7 (hidden), which holds `=SUM(SIGN(SearchHits))`, so it is calculated once and every formula reads the stored value (D15).
 - **SearchPages:** number of pages: *SearchTotal* divided by *ResultLimit*, rounded up. Never less than 1.
 - **CurrentPage:** page really shown: *PageNumber* kept between 1 and *SearchPages*.
 
 ### Outputs
 
-- **Results (cell B6):** one formula that spills the products of the current page: photo, barcode, name, brand, package, carbs, portions, sugars, fat, protein, kcal and data check.
-- **Headers (B5:N5):** fixed text, not part of the formula. If the columns of the formula change order, the headers have to be moved by hand.
-- **Counter (cell F3):** products on screen and total ("Showing 51–100 of 2,661"). Empty when there is no search or no match.
-- **Page total (cell K3):** number of pages ("of 54").
-- **Links (N6:N105):** one formula per row that builds a "View" link to the product page from the barcode in column C. Empty in rows without a product.
-- **Messages:** "Type a product name or barcode" when the search is empty and "No results" when nothing matches.
-- **Macro:** when *SearchTerm* or *ResultLimit* changes, *PageNumber* goes back to 1. Code in *vba/Search.cls*.
+- **Results (cell B11):** one formula that spills the products of the current page: photo, barcode, name, brand, package, carbs, portions, sugars, fat, protein, kcal and data check.
+- **Headers (B10:N10):** fixed text, not part of the formula. If the columns of the formula change order, the headers have to be moved by hand.
+- **Counter (cell C8):** products on screen and total ("Showing 51–100 of 2,661"), under the search box. Empty when there is no search or no match.
+- **Page total (cell K7):** number of pages ("of 54").
+- **Links (N11:N110):** one formula per row that builds a "View" link to the product page from the barcode in column C.
+- **Colours:** white and beige rows by conditional formatting, only in rows with a product.
+- **How to search:** card on the left with the steps and what the Data column means.
+- **Macros:** when *SearchTerm* or *ResultLimit* changes, *PageNumber* goes back to 1. When the sheet is opened, the zoom is set to 80%. Code in *vba/Search.cls*.
 
-Formulas and how they work: *docs/workbook_formulas.md*.
+Formulas and how they work: *docs/workbook_formulas.md*. Decisions: D6 to D9, D12, D13, D15, D25.
 
 
 ## Calculator
 
-Adds up the carbs and portions of a meal from the barcode and the amount of each food.
+Adds up the carbs and portions of a meal from the barcode and the amount of each food. It looks like a calculator (D25).
 
-- **Table (tblMeal, B5:F15):** 10 rows, one per food, and a total row (row 16). Empty rows show nothing.
-- **Inputs:** *Barcode* (formatted as text) and *Amount (g or ml)*, typed by the user. The barcode can be copied from Search: Ctrl + C, then Ctrl + Shift + V to paste only the value.
-- **Product:** name of the product, to check that the barcode is the right one. "Not found" if the barcode is not in *tblProducts*.
-- **Carbs (g):** carbs in the amount eaten.
-- **Portions:** carbs divided by 10.
-- **Total row:** carbs and portions of the whole meal.
-- **Clear button:** empties *Barcode* and *Amount* of every row to start a new meal. Macro *ClearMeal* (*vba/Calculator.bas*).
+- **Table (tblMeal, C13:G23):** 10 rows, one per food. Empty rows show nothing.
+- **Inputs (beige cells):** *Barcode* (formatted as text) and *Amount (g or ml)*. The barcode can be copied from Search with Ctrl + C and pasted with Ctrl + Shift + V. *Amount* only accepts numbers of 0 or more.
+- **Product, Carbs (g), Portions (white cells):** filled by formulas. Names longer than 36 characters end in "…".
+- **Screen:** total carbs and portions of the meal, text boxes linked to K1 and K2 (hidden columns).
+- **Keys:** C empties the meal (*ClearMeal*). ← removes the last food (*RemoveLast*). Code in *vba/Calculator.bas*.
+- **Messages:** each column shows a short message when a cell is selected (data validation).
+- **How to use:** card on the left with the steps.
 
-Formulas: *docs/workbook_formulas.md*. Decisions: D14.
+Formulas: *docs/workbook_formulas.md*. Decisions: D14, D25.
 
 
 ## Analysis
@@ -88,9 +73,46 @@ Dashboard of the Spanish market for a person with type 1 diabetes. It fits in on
 Decisions: D18 to D23.
 
 
+## Quality
+
+How far the data can be trusted (D24).
+
+- **Cards:** products in the file, validated, flagged and with minor issues.
+- **Why products are flagged:** products that break each rule of *nutrition_check*.
+- **Missing data:** share of products without each field.
+- **Things to know:** notes about the limits of the data, and the download date.
+- **Calculations:** formulas in the hidden columns AH:AL. The charts read them.
+- **Zoom:** fits columns A to AF to the window. Code in *vba/Quality.cls*.
+
+
+## Settings
+
+Information about the data and the workbook, one card per setting. The values are text boxes linked to the cells under the cards.
+
+- **Source (C3):** link to the Open Food Facts download page.
+- **License (C5):** link to the Open Database License (ODbL). The data can be used and shared if the source is credited.
+- **DownloadDate (C7):** date when the export was downloaded. Typed by hand when the file is replaced.
+- **Products (C9):** number of rows of *tblProducts*, counted with ROWS.
+- **How to refresh (C11):** replace the file in *data\raw* and use Data > Refresh All.
+- **Data file (C13):** relative path of the CSV.
+- **Requirements (C15):** Excel for Microsoft 365, with macros enabled.
+- **Repository (C17):** link to this repository.
+- **FilePath (F2, hidden):** full path of the CSV, read by Power Query (*pFilePath*). Empty in the saved file; a macro writes it when the workbook is opened and after it is saved (D26, *vba/ThisWorkbook.cls*).
+
+
+## Data
+
+Clean product table, loaded by the Power Query query *qSource* (code in *powerquery/qSource.pq*).
+
+- **Table name:** tblProducts.
+- **Size:** 246,846 products and 32 columns. The last two, *search_name* and *search_brand*, are only used by the search sheet (D12).
+- **Refresh:** Data > Refresh All reads the whole file again and takes a few minutes.
+- **Look:** table style *CarbData* and frozen header. Nothing else (D25).
+
+
 ## AnalysisData
 
-Helper sheet with the pivot tables and charts that feed the dashboard. The user doesn't work on it.
+Hidden helper sheet with the pivot tables and cells that feed the dashboard. The user doesn't work on it.
 
 - **Data Model:** *tblProducts*, *tblLabels*, *tblPrivateLabels* and *tblCountries* are loaded into the Data Model (Power Pivot). DAX columns and measures live in the model, so the Data sheet doesn't change (D16).
 - **Pivot tables:** one per question: products by carb band, share of sugar by band, carbs by package promise, 10 most scanned products sold only in Spain, products by brand type, and share of products also sold in other countries.

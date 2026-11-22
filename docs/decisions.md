@@ -225,8 +225,6 @@ Show results in pages of 20, 50 or 100, with buttons to move between pages.
 
 ### Rules
 
-- ### Rules
-
 - A macro sets the page back to 1 when the search or the page size changes (*vba/Search.cls*).
 
 ### Discarded
@@ -562,8 +560,45 @@ Discarded: a slicer for countries. *tblCountries* has no relationship with the p
 <sub>20 November 2026</sub>
 
 - **Labels chart:** the axis ends a little after the top of the chosen carb range, and a dashed line marks that top ("30g"). Without it, a bar of 24 g looks almost full when the range is 20-30 g. The line is placed a little to the right of its real value so the bar labels don't touch it; the bar labels give the exact grams.
-- **Map:** 17 countries instead of 10. With 10, Madeira and the Azores pulled the map to the left and half of the box was empty. A card next to the map shows the country that shares the most products and how many, and it changes with the slicers. France is first in almost every case: Open Food Facts started in France and most products are added by French and Spanish users, so French products are over-represented.
+- **Map:** 17 countries instead of 10. With 10, Madeira and the Azores pulled the map to the left and half of the box was empty. A card next to the map shows the country that shares the most products and how many, and it changes with the slicers. France is first in almost every case: Open Food Facts started in France and most products are added by French and Spanish users, so French products are over-represented. On the Open Food Facts site, France has about 1.2 million products and Portugal fewer than 20,000, which is why Portugal ranks low even though it is next door.
 - **Most scanned list:** 10 products instead of 15, so the text can be read without zoom. It is a linked picture of the pivot table, because a pivot table can't sit on top of the boxes. The colours come from a pivot table style, because cell formats stay with each product and are lost when the slicers change the list.
 - **Titles:** text boxes outside the charts, all at the same distance from the top and left edge of their box.
 - **Grams without space** ("24g"), the same in every chart.
+
+
+## D24 - Quality sheet
+<sub>21 November 2026</sub>
+
+A sheet that shows how far the data can be trusted, so the numbers of the dashboard are not taken on faith.
+
+- **Four cards:** products in the file, validated, flagged and with minor issues. The same counts that Power Query and Search use.
+- **Why products are flagged:** one bar per rule of *nutrition_check*. The bars add up to more than the flagged products, because some products break more than one rule.
+- **Missing data:** share of products without serving size, fibre, Nutri-Score, category, brand or sugars. It explains why some charts were left out (D18).
+- **Things to know:** five short notes about the limits of the data, and the download date read from Settings.
+
+Everything is calculated with formulas in hidden columns of the same sheet (AH:AL), so it changes on refresh.
+
+
+## D25 - Look of the sheets
+<sub>21 November 2026</sub>
+
+Every sheet uses the same palette (orange, yellow, beige), Aptos for text and Aptos Black for titles and numbers.
+
+- **Calculator:** it looks like a calculator. A screen with the total carbs and portions, the ten rows of the meal, and two keys: C clears the meal and ← removes the last food. The cells the user types in are beige and the ones Excel fills are white. The total row of the table was removed: the screen shows the totals.
+- **Search:** the controls on top, the results below, and a card on the left with how to search and what the Data column means. The page buttons replace the spin button, which couldn't be styled.
+- **Settings:** one card per setting. The values are text boxes linked to their cells, because cells can't have round corners.
+- **Data:** only a table style with the colours of the workbook. Nothing else is touched, because every other sheet reads this table.
+- **Order of the tabs:** the sheets for the user first and in orange (Search, Calculator, Analysis, Quality), the technical ones after and in grey (Settings, Data). AnalysisData is hidden, but anyone can unhide it.
+
+Discarded: freezing the headers of Search. Excel draws the frozen line across the whole window, and a page has 100 results at most.
+
+
+## D26 - Path of the data file
+<sub>21 November 2026</sub>
+
+Power Query needs the full path of the CSV, and Excel has no relative paths. Before, a formula calculated it in Settings, and the saved file kept the last result: the folders of the computer where it was saved.
+
+Now the cell *FilePath* is empty in the saved file. When the workbook is opened, and right after it is saved, a macro writes the path of that computer: the folder of the workbook plus *data\raw\*, or one level up if the workbook is inside *workbook/*. Right before saving, it empties the cell again. Settings only shows the relative path.
+
+The only condition is that macros are enabled, which the workbook already needs. Code in *vba/ThisWorkbook.cls*.
 

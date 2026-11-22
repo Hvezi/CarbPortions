@@ -26,10 +26,10 @@ LOWER turns the search into lowercase. REDUCE goes through each pair (accented l
 
 **SearchTotal**
 ```
-=Search!$P$3
+=Search!$P$7
 ```
 
-Cell P3 holds `=SUM(SIGN(SearchHits))`. SIGN turns every match into 1 (a product can be 2 if it matches by name and barcode) and SUM counts them. A named formula is calculated again every time it is used, so the total lives in a cell and the name only points to it (D15).
+Cell P7 (hidden) holds `=SUM(SIGN(SearchHits))`. SIGN turns every match into 1 (a product can be 2 if it matches by name and barcode) and SUM counts them. A named formula is calculated again every time it is used, so the total lives in a cell and the name only points to it (D15).
 
 **SearchPages**
 ```
@@ -45,7 +45,7 @@ Matches divided by products per page, rounded up: 2,661 / 50 = 53.2, so 54 pages
 
 MAX stops pages below 1 and MIN stops pages above the last one. If the user asks for page 999 of 54, page 54 is shown.
 
-### Results (cell B6)
+### Results (cell B11)
 
 ```
 =LET(
@@ -102,7 +102,7 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 - No match (OR finds no 1 in *hits*): "No results".
 - Otherwise: photo on the left and the clean columns on the right.
 
-### Counter (cell F3)
+### Counter (cell C8)
 
 ```
 =IF(SearchTerm = "", "", IF(SearchTotal = 0, "", LET(first, (CurrentPage - 1) * ResultLimit + 1, last, MIN(CurrentPage * ResultLimit, SearchTotal), "Showing " & TEXT(first, "#,##0") & "–" & TEXT(last, "#,##0") & " of " & TEXT(SearchTotal, "#,##0"))))
@@ -113,34 +113,35 @@ MAX stops pages below 1 and MIN stops pages above the last one. If the user asks
 - **TEXT:** adds the thousands separator (2,661).
 - Empty when there is no search or no match.
 
-### Page total (cell K3)
+### Page total (cell K7)
 
 ```
 =IF(SearchTerm = "", "", IF(SearchTotal = 0, "", "of " & SearchPages))
 ```
 
-### Links (cells N6:N105)
+### Links (cells N11:N110)
 
 ```
-=IF(C6 = "", "", HYPERLINK("https://es.openfoodfacts.org/product/" & C6, "View"))
+=IF(C11 = "", "", HYPERLINK("https://es.openfoodfacts.org/product/" & C11, "View"))
 ```
 
-One formula per row, copied down from N6 to N105. Each row reads the barcode of its own row (column C). Rows without a product stay empty. It is not part of B6 because links inside a spilled result are not clickable (D8).
+One formula per row, copied down from N11 to N110. Each row reads the barcode of its own row (column C). Rows without a product stay empty. It is not part of B6 because links inside a spilled result are not clickable (D8).
 
 
 ## Calculator
 
 All formulas are calculated columns of *tblMeal*: written once, they fill the whole column. `[@Barcode]` means the barcode of the same row.
 
-### Product (column D)
+### Product (column E)
 
 ```
-=IF([@Barcode] = "", "", XLOOKUP([@Barcode], tblProducts[code], tblProducts[product_name], "Not found"))
+=IF([@Barcode] = "", "", LET(n, XLOOKUP([@Barcode], tblProducts[code], tblProducts[product_name], "Not found"), IF(LEN(n) > 36, LEFT(n, 35) & "…", n)))
 ```
 
-XLOOKUP looks for the barcode in *code* and returns *product_name* from the same row. "Not found" when the barcode doesn't exist. Empty when there is no barcode.
+- **n:** XLOOKUP looks for the barcode in *code* and returns *product_name* from the same row. "Not found" when the barcode doesn't exist.
+- Names longer than 36 characters are cut and end in "…", so they fit in the column. The full name is in Search.
 
-### Carbs (column E)
+### Carbs (column F)
 
 ```
 =IF(OR([@Barcode] = "", [@[Amount (g or ml)]] = ""), "", LET(c, XLOOKUP([@Barcode], tblProducts[code], tblProducts[carbohydrates_100g], ""), IF(c = "", "", ROUND(c * [@[Amount (g or ml)]] / 100, 1))))
@@ -150,7 +151,7 @@ XLOOKUP looks for the barcode in *code* and returns *product_name* from the same
 - **c:** carbs per 100 g of the product, with the same XLOOKUP.
 - Carbs per 100 g × amount / 100, with 1 decimal: 78 × 30 / 100 = 23.4.
 
-### Portions (column F)
+### Portions (column G)
 
 ```
 =IF([@[Carbs (g)]] = "", "", ROUND([@[Carbs (g)]] / 10, 1))
@@ -158,10 +159,57 @@ XLOOKUP looks for the barcode in *code* and returns *product_name* from the same
 
 Carbs of the row divided by 10 (1 portion = 10 g of carbs).
 
-### Total row (row 16)
+### Screen (cells K1 and K2, hidden)
 
-- **Carbs:** `=SUBTOTAL(109, [Carbs (g)])`, the sum of the column. 109 is the code for SUM, ignoring hidden rows.
-- **Portions:** `=ROUND(SUBTOTAL(109, [Carbs (g)]) / 10, 1)`, calculated from the total carbs. Adding the rounded portions of each row would add up rounding errors.
+```
+=TEXT(SUM(tblMeal[Carbs (g)]), "0.0") & "g"
+=TEXT(SUM(tblMeal[Carbs (g)]) / 10, "0.0")
+```
+
+Total carbs and total portions of the meal. SUM skips the empty rows, which hold "". Portions come from the total carbs, not from adding the rounded portions of each row.
+
+
+## Quality
+
+All in hidden columns of the Quality sheet.
+
+### Cards (AI1:AI4)
+
+```
+=ROWS(tblProducts)
+=COUNTIF(tblProducts[nutrition_check], "OK")
+=COUNTIF(tblProducts[nutrition_check], "Check")
+=COUNTIFS(tblProducts[nutrition_check], "OK", tblProducts[data_quality_errors_tags], "*nutrition*")
+```
+
+Products in the file, validated, flagged, and validated with an Open Food Facts nutrition error (the "Minor issue" of Search, D13).
+
+### Why products are flagged (AI7:AI11)
+
+One formula per rule of *nutrition_check* (D5, D10). For example, kcal above 900:
+
+```
+=COUNTIF(tblProducts[[energy-kcal_100g]], ">900")
+```
+
+Columns with a hyphen go inside double brackets. The rule "kcal don't match the macros" calculates the kcal again with LET, with the same EU factors as Power Query. AK7 sorts the five rules with SORTBY, smallest first, so the longest bar is on top.
+
+### Missing data (AI14:AI19)
+
+```
+=COUNTBLANK(tblProducts[sugars_100g]) / ROWS(tblProducts)
+```
+
+The same for fibre, serving size, brand and category. For the Nutri-Score, only the grades a to e count as having one.
+
+### Download date (AH22)
+
+```
+="Data downloaded on " & DAY(Settings!$C$7) & " " & CHOOSE(MONTH(Settings!$C$7), "January", …, "December") & " " & YEAR(Settings!$C$7)
+```
+
+Built by hand, not with TEXT, because the codes of TEXT change with the language of Excel ("yyyy" doesn't work in Spanish).
+
 
 ## Data model (DAX)
 
