@@ -3,7 +3,16 @@
 
 ## Order of the sheets
 
-Search, Calculator, Analysis and Quality, with orange tabs, are for the user. Settings and Data, with grey tabs, are technical. AnalysisData is hidden (right click on a tab > Unhide). All the sheets share the palette, the fonts and the title band (D25).
+Home is the first sheet and the workbook always opens on it. Search, Calculator, Analysis and Quality, with orange tabs, are for the user. Settings and Data, with grey tabs, are technical. AnalysisData is hidden (right click on a tab > Unhide). All the sheets share the palette, the fonts and the title band (D25).
+
+
+## Home
+
+Cover of the workbook: the title band, one line about the project and one card per sheet.
+
+- **Cards:** Search, Calculator, Analysis and Quality in orange, Settings and Data in grey, like their tabs. Each card has the name of the sheet, one line about it and takes you to it.
+- **Pictures:** each card except Data has a photo of its sheet (*Shot Search*, *Shot Calculator*, and so on), all the same size.
+- **Zoom:** fits columns A to AF to the window. Code in *vba/Home.cls*.
 
 
 ## Search
@@ -48,9 +57,10 @@ Adds up the carbs and portions of a meal from the barcode and the amount of each
 - **Inputs (beige cells):** *Barcode* (formatted as text) and *Amount (g or ml)*. The barcode can be copied from Search with Ctrl + C and pasted with Ctrl + Shift + V. *Amount* only accepts numbers of 0 or more.
 - **Product, Carbs (g), Portions (white cells):** filled by formulas. Names longer than 36 characters end in "…".
 - **Screen:** total carbs and portions of the meal, text boxes linked to K1 and K2 (hidden columns).
-- **Keys:** C empties the meal (*ClearMeal*). ← removes the last food (*RemoveLast*). Code in *vba/Calculator.bas*.
+- **Keys:** C empties the meal (*ClearMeal*). ← removes the last food (*RemoveLast*). Code in *vba/modCalculator.bas*.
 - **Messages:** each column shows a short message when a cell is selected (data validation).
 - **How to use:** card on the left with the steps.
+- **Zoom:** 90% when the sheet is opened. Code in *vba/Calculator.cls*.
 
 Formulas: *docs/workbook_formulas.md*. Decisions: D14, D25.
 
@@ -67,7 +77,7 @@ Dashboard of the Spanish market for a person with type 1 diabetes. It fits in on
 - **Slicers:** in a strip at the bottom: carbs per 100 g, brand, says sugar free, says whole grain and says gluten free. The dashboard shows the whole market by default. A slicer doesn't filter the chart split by its own field (D22).
 - **Boxes:** each card and chart sits on its own white box. The charts have no title or background; the title is a text box inside the box.
 - **Most scanned list:** linked picture of the top 10 pivot table in AnalysisData, so it changes with the slicers.
-- **Zoom:** when the sheet is opened, the zoom fits the dashboard to the width of the window. Code in *vba/Analysis.cls*.
+- **Zoom:** 80% when the sheet is opened. Code in *vba/Analysis.cls*.
 - **Slicer events:** when a slicer changes, the labels chart moves its top line to the chosen carb range and the doughnut greys out the brands not chosen. Code in *vba/AnalysisData.cls*.
 
 Decisions: D18 to D23.
@@ -82,7 +92,7 @@ How far the data can be trusted (D24).
 - **Missing data:** share of products without each field.
 - **Things to know:** notes about the limits of the data, and the download date.
 - **Calculations:** formulas in the hidden columns AH:AL. The charts read them.
-- **Zoom:** fits columns A to AF to the window. Code in *vba/Quality.cls*.
+- **Zoom:** 90% when the sheet is opened. Code in *vba/Quality.cls*.
 
 
 ## Settings

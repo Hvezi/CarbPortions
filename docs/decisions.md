@@ -522,7 +522,7 @@ The dashboard has twelve blocks: five key numbers, six visuals and the slicers. 
 One screen, with all the blocks on a grid of equal boxes.
 
 - ***Grid:*** columns A to AF with the same width. The content goes from B to AE, with A and AF as margins. A key number card is the unit: the big visuals are two or three cards wide, with the same gap between all the boxes.
-- ***One screen:*** the dashboard ends at row 45. When the sheet is opened, a macro fits columns A to AF to the width of the window.
+- ***One screen:*** the dashboard ends at row 45. When the sheet is opened, a macro sets the zoom to 80% (D25).
 - ***Key number cards:*** title, number and, when needed, a subtitle with the unit or the limit. All the cards have the same position for each part.
 - ***Slicers at the bottom:*** the dashboard shows the whole market by default. The user filters only if they want to.
 - ***Titles outside the charts:*** each chart sits on a box without title or background. The title is a text box in the box, so all titles are at the same height and with the same font. The charts have no subtitle.
@@ -584,11 +584,14 @@ Everything is calculated with formulas in hidden columns of the same sheet (AH:A
 
 Every sheet uses the same palette (orange, yellow, beige), Aptos for text and Aptos Black for titles and numbers.
 
+- **Home:** the workbook opens on a cover with one card per sheet, each with a photo of the sheet and a line about what it does. Someone who opens the file for the first time knows where to go without reading the README.
+
 - **Calculator:** it looks like a calculator. A screen with the total carbs and portions, the ten rows of the meal, and two keys: C clears the meal and ← removes the last food. The cells the user types in are beige and the ones Excel fills are white. The total row of the table was removed: the screen shows the totals.
 - **Search:** the controls on top, the results below, and a card on the left with how to search and what the Data column means. The page buttons replace the spin button, which couldn't be styled.
 - **Settings:** one card per setting. The values are text boxes linked to their cells, because cells can't have round corners.
 - **Data:** only a table style with the colours of the workbook. Nothing else is touched, because every other sheet reads this table.
-- **Order of the tabs:** the sheets for the user first and in orange (Search, Calculator, Analysis, Quality), the technical ones after and in grey (Settings, Data). AnalysisData is hidden, but anyone can unhide it.
+- **Order of the tabs:** Home first, then the sheets for the user in orange (Search, Calculator, Analysis, Quality), and the technical ones after and in grey (Settings, Data). AnalysisData is hidden, but anyone can unhide it.
+- **Zoom:** each sheet opens at a fixed zoom, chosen by eye: 80% for Search and Analysis, 90% for Calculator and Quality. Fitting the zoom to the window gave a different size on each screen and sometimes failed. Only Home still fits columns A to AF to the window, because it is only cards.
 
 Discarded: freezing the headers of Search. Excel draws the frozen line across the whole window, and a page has 100 results at most.
 

@@ -6,7 +6,7 @@
   An Excel workbook to count carbs in food sold in Spain, built on the Open Food Facts database.
 </p>
 
-People with type 1 diabetes count the carbs of everything they eat. In Spain they count in portions: one portion is 10g of carbs. Labels give carbs per 100g, so there is always some maths to do, and many products are hard to find.
+People with type 1 diabetes count the carbs of everything they eat. In Spain they count in portions, one portion is 10g of carbs. Labels give carbs per 100g, so there is always some maths to do, and many products are hard to find.
 
 I built this workbook to make that easier: find any product, add up a meal, and see what the Spanish market looks like in terms of carbs. It is also my first full data project, so I cleaned, checked and documented everything as if someone else had to maintain it.
 
@@ -20,7 +20,7 @@ Type a product, a brand or a barcode and you get every match with its photo, nut
 
 Behind the search box there are 246,846 products. Names and brands are stored a second time without accents or capitals, so "maria", "María" and "MARIA" find the same products. Results are sorted so the useful ones come first: products with reliable data, then products where all your words are in the name (not only in the brand), then the most scanned ones. They come in pages of 20, 50 or 100, because every photo is downloaded from the internet and showing thousands at once took minutes.
 
-Every product also says how much you can trust its numbers: ✓ when they look right, *Minor issue* when Open Food Facts has small doubts, and ⚠ *Check label* when they don't add up. Flagged products are not hidden, because someone looking for their own barcode should still find it.
+Every product also says how much you can trust its numbers: ✓ when they look right, *Minor issue* when Open Food Facts has small doubts, and &#9888;&#xFE0E; *Check label* when they don't add up. Flagged products are not hidden, because someone looking for their own barcode should still find it.
 
 ![Search](screenshots/search.png)
 
@@ -108,7 +108,7 @@ Open it with macros enabled and start from **Home**: each card takes you to a sh
 
 **Validated** → products whose nutrients add up. The dashboard only uses these.
 
-**Flagged** → products whose numbers don't add up, for example more than 900 kcal per 100g. Search shows them with ⚠ *Check label*.
+**Flagged** → products whose numbers don't add up, for example more than 900 kcal per 100g. Search shows them with &#9888;&#xFE0E; *Check label*.
 
 **Minor issue** → the numbers add up, but Open Food Facts has small doubts about them.
 
