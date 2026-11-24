@@ -6,7 +6,7 @@
   An Excel workbook to count carbs in food sold in Spain, built on the Open Food Facts database.
 </p>
 
-People with type 1 diabetes count the carbs of everything they eat. In Spain they count in portions, one portion is 10g of carbs. Labels give carbs per 100g, so there is always some maths to do, and many products are hard to find.
+People with type 1 diabetes count the carbs of everything they eat. In Spain they count in portions: one portion is 10g of carbs. Labels give carbs per 100g, so there is always some maths to do, and many products are hard to find.
 
 I built this workbook to make that easier: find any product, add up a meal, and see what the Spanish market looks like in terms of carbs. It is also my first full data project, so I cleaned, checked and documented everything as if someone else had to maintain it.
 
@@ -72,7 +72,7 @@ How far the data can be trusted. It shows how many products were flagged and whi
 
 **Clean data** → Power Query reads the full Open Food Facts export, keeps the products sold in Spain and fixes types, text and impossible values. Products with numbers that don't add up are flagged, not deleted.
 
-**Every decision written down** → [docs/decisions.md](docs/decisions.md) has 26 decisions, each with its context, what was chosen and what was discarded.
+**Every decision written down** → [docs/decisions.md](docs/decisions.md) explains 26 decisions day by day: what I chose, why, and what I left out.
 
 **Documented workbook** → [docs/workbook_structure.md](docs/workbook_structure.md) explains every sheet and [docs/workbook_formulas.md](docs/workbook_formulas.md) every formula and measure.
 

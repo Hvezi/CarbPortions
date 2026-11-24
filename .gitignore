@@ -1,13 +1,13 @@
-# Datos en bruto: demasiado grandes para GitHub
+# Raw data: too big for GitHub
 data/raw/*
 !data/raw/.gitkeep
 
-# Libro completo con ~1M de filas (irá como Release)
+# Full workbook: published as a Release, not in the repository
 workbook/*_full.xlsm
 
-# Archivos temporales de Excel (se crean mientras el libro está abierto)
+# Excel temporary files, created while the workbook is open
 ~$*
 
-# Archivos del sistema
+# System files
 Thumbs.db
 desktop.ini
