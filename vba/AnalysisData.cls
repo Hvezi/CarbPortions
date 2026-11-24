@@ -2,7 +2,7 @@
 ' Runs every time a slicer updates a pivot table of this sheet.
 ' 1. Labels chart: the top line marks the highest carb range chosen (100g if none).
 ' 2. Doughnut: brands not chosen in the brand slicer turn grey.
-' See docs/decisions.md, D22 and D23
+' See docs/decisions.md, "Filters" and "Chart by chart"
 
 Private Sub Worksheet_PivotTableUpdate(ByVal Target As PivotTable)
     Dim sc As SlicerCache, it, v As Double, mx As Double

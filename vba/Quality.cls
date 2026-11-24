@@ -1,6 +1,6 @@
 ' Quality (sheet module)
 ' Opens the sheet at 90%, from the top left corner.
-' See docs/decisions.md, D24 and D25
+' See docs/decisions.md, "Quality sheet" and "Look of the sheets"
 
 Private Sub Worksheet_Activate()
     ActiveWindow.Zoom = 90

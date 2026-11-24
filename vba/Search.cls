@@ -3,7 +3,7 @@
 ' 2. Sets the zoom to 80% when the sheet is opened.
 ' Input:  SearchTerm, ResultLimit (named cells in the Search sheet)
 ' Output: PageNumber = 1
-' See docs/decisions.md, D9
+' See docs/decisions.md, "Results in pages"
 
 Private Sub Worksheet_Change(ByVal Target As Range)
     ' Leave if the changed cell is not the search or the page size

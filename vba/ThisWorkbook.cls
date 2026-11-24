@@ -3,7 +3,7 @@
 ' The cell is emptied right before saving, so the saved file never holds the folders
 ' of the computer where it was saved.
 ' The workbook always opens on the Home sheet.
-' See docs/decisions.md, D25 and D26
+' See docs/decisions.md, "Where the data file is" and "Home sheet"
 
 Private Sub Workbook_Open()
     SetFilePath

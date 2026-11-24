@@ -1,7 +1,7 @@
 ' Home (sheet module)
 ' Fits columns A to AF to the width of the window when the sheet is opened,
 ' so the cards fill the screen on any computer.
-' See docs/decisions.md, D25
+' See docs/decisions.md, "Home sheet"
 
 Private Sub Worksheet_Activate()
     ' Don't show the steps on screen

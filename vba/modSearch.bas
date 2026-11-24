@@ -2,7 +2,7 @@
 ' Buttons ‹ and › next to the page number in the Search sheet.
 ' Input:  PageNumber, SearchPages (named cell and named formula)
 ' Output: PageNumber one page down or up, never below 1 or above the last page
-' See docs/decisions.md, D9 and D25
+' See docs/decisions.md, "Results in pages"
 
 Sub PrevPage()
     With ThisWorkbook.Worksheets("Search").Range("PageNumber")
