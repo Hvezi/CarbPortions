@@ -2,9 +2,8 @@
   <img src="screenshots/banner.gif" alt="T1D Carb Portions" width="100%">
 </p>
 
-<p align="center">
-  An Excel workbook to count carbs in food sold in Spain, built on the Open Food Facts database.
-</p>
+An Excel workbook to count carbs in food sold in Spain, built on the Open Food Facts database.
+
 
 People with type 1 diabetes count the carbs of everything they eat. In Spain they count in portions: one portion is 10g of carbs. Labels give carbs per 100g, so there is always some maths to do, and many products are hard to find.
 
@@ -90,7 +89,9 @@ How far the data can be trusted. It shows how many products were flagged and whi
 
 ## Using the workbook
 
-Open it with macros enabled and start from **Home**: each card takes you to a sheet. To load newer data, download the CSV export from [Open Food Facts](https://world.openfoodfacts.org/data), put it in `data/raw/` next to the workbook and use **Data > Refresh All**. It takes a few minutes.
+Download `CarbPortions_full.xlsm` from [Releases](https://github.com/Hvezi/CarbPortions/releases). It needs Excel for Microsoft 365. Windows blocks the macros of files downloaded from the internet, so before opening it, right click the file > **Properties**, tick **Unblock** and press **OK**. Then open it and start from **Home**: each card takes you to a sheet.
+
+To load newer data, download the CSV export from [Open Food Facts](https://world.openfoodfacts.org/data), put it in a `data/raw/` folder next to the workbook and use **Data > Refresh All**. It takes a few minutes.
 
 <br>
 
