@@ -89,7 +89,7 @@ How far the data can be trusted. It shows how many products were flagged and whi
 
 ## Using the workbook
 
-Download `CarbPortions_full.xlsm` from [Releases](https://github.com/Hvezi/CarbPortions/releases). It needs Excel for Microsoft 365. Windows blocks the macros of files downloaded from the internet, so before opening it, right click the file > **Properties**, tick **Unblock** and press **OK**. Then open it and start from **Home**: each card takes you to a sheet.
+Built and tested in Excel for Microsoft 365, version 2611, on Windows. Download `CarbPortions_full.xlsm` from [Releases](https://github.com/Hvezi/T1D-CarbPortions/releases). Windows blocks the macros of files downloaded from the internet, so before opening it, right click the file > Properties, tick Unblock and press OK. Then open it and start from **Home**: each card takes you to a sheet.
 
 To load newer data, download the CSV export from [Open Food Facts](https://world.openfoodfacts.org/data), put it in a `data/raw/` folder next to the workbook and use **Data > Refresh All**. It takes a few minutes.
 
